@@ -1,131 +1,249 @@
-import React, { useState } from 'react';
-import { useAuth } from '../auth/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-export function Login() {
+export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
-  const [error, setError] = useState('');
 
-  const validate = () => {
-    if (!username || !password) {
-      setError('Completa ambos campos.');
-      return false;
-    }
-    if (username.length < 3) {
-      setError('El usuario debe tener al menos 3 caracteres.');
-      return false;
-    }
-    if (password.length < 4) {
-      setError('La contraseña debe tener al menos 4 caracteres.');
-      return false;
-    }
-    setError('');
-    return true;
-  };
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [remember, setRemember] = useState(true);
 
-  const handleSubmit = async (e) => {
+  const [touched, setTouched] = useState({ u: false, p: false });
+  const [status, setStatus] = useState("idle"); // idle | loading | success | error
+  const [error, setError] = useState("");
+
+  // ── Validaciones ──────────────────────────────────────────────────────────────
+  const userError = useMemo(() => {
+    if (!touched.u) return "";
+    if (!username) return "Ingresá el usuario o email.";
+    if (username.length < 3) return "El usuario debe tener al menos 3 caracteres.";
+    return "";
+  }, [username, touched.u]);
+
+  const passError = useMemo(() => {
+    if (!touched.p) return "";
+    if (!password) return "Ingresá la contraseña.";
+    if (password.length < 8) return "Mínimo 8 caracteres.";
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password))
+      return "Debe incluir letras y números.";
+    return "";
+  }, [password, touched.p]);
+
+  const formValid = username && password && !userError && !passError;
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!validate()) return;
+    setTouched({ u: true, p: true });
+    if (!formValid || status === "loading") return;
 
-    setStatus('loading');
-    setError('');
+    setStatus("loading");
+    setError("");
+
     try {
-      const res = await login({ username, password });
-      if (res.status === 200) {
-        setStatus('success');
-        navigate('/reservar-citas'); // Redirige directo al área admin
+      // Podés pasar remember si tu AuthContext lo soporta
+      const res = await login({ username, password, remember });
+      if (res?.status === 200) {
+        setStatus("success");
+        navigate("/reservar-citas");
       } else {
-        setStatus('error');
-        setError(res.message || 'Error desconocido');
+        throw new Error(res?.message || "Credenciales inválidas");
       }
     } catch (err) {
-      setStatus('error');
-      setError(err.message || 'Error desconocido');
+      setStatus("error");
+      setError(err?.message || "No se pudo iniciar sesión.");
+    } finally {
+      setStatus((s) => (s === "success" ? s : "idle"));
     }
-  };
+  }
 
   return (
-    <div style={{
-      minHeight: '60vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
       <form
-        style={{
-          width: 350,
-          padding: 24,
-          background: '#f9fbff',
-          borderRadius: 10,
-          boxShadow: '0 2px 16px #0001',
-        }}
         onSubmit={handleSubmit}
-        autoComplete="off"
+        noValidate
+        autoComplete="on"
+        style={{
+          width: 360,
+          padding: 24,
+          background: "#f9fbff",
+          borderRadius: 10,
+          boxShadow: "0 2px 16px #0001",
+        }}
       >
-        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Iniciar Sesión</h2>
-        <div style={{ marginBottom: 16 }}>
-          <label>Usuario</label>
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            style={{
-              width: '100%',
-              padding: 8,
-              marginTop: 4,
-              borderRadius: 6,
-              border: '1px solid #b0b0b0'
-            }}
-            autoFocus
-            disabled={status === 'loading'}
-          />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label>Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            style={{
-              width: '100%',
-              padding: 8,
-              marginTop: 4,
-              borderRadius: 6,
-              border: '1px solid #b0b0b0'
-            }}
-            disabled={status === 'loading'}
-          />
-        </div>
+        <h2 style={{ textAlign: "center", marginBottom: 16 }}>Iniciar sesión</h2>
+
         {error && (
-          <div style={{ color: 'red', marginBottom: 12, textAlign: 'center' }}>
+          <div
+            role="alert"
+            style={{
+              background: "#fee2e2",
+              border: "1px solid #fecaca",
+              color: "#991b1b",
+              borderRadius: 8,
+              padding: "8px 10px",
+              marginBottom: 12,
+              fontSize: 14,
+              textAlign: "center",
+            }}
+          >
             {error}
           </div>
         )}
+
+        {/* Usuario */}
+        <div style={{ marginBottom: 12 }}>
+          <label htmlFor="login-user" style={{ fontSize: 14 }}>
+            Usuario o email
+          </label>
+          <input
+            id="login-user"
+            type="text"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              if (error) setError("");
+            }}
+            onBlur={() => setTouched((t) => ({ ...t, u: true }))}
+            placeholder="usuario o email"
+            autoComplete="username"
+            disabled={status === "loading"}
+            style={{
+              width: "100%",
+              padding: 10,
+              marginTop: 4,
+              borderRadius: 6,
+              border: `1px solid ${userError ? "#fca5a5" : "#b0b0b0"}`,
+              outline: "none",
+            }}
+          />
+          {userError && (
+            <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 4 }}>
+              {userError}
+            </div>
+          )}
+        </div>
+
+        {/* Password */}
+        <div style={{ marginBottom: 12 }}>
+          <label htmlFor="login-pass" style={{ fontSize: 14 }}>
+            Contraseña
+          </label>
+          <div style={{ position: "relative" }}>
+            <input
+              id="login-pass"
+              type={showPass ? "text" : "password"}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError("");
+              }}
+              onBlur={() => setTouched((t) => ({ ...t, p: true }))}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              disabled={status === "loading"}
+              style={{
+                width: "100%",
+                padding: "10px 38px 10px 10px",
+                marginTop: 4,
+                borderRadius: 6,
+                border: `1px solid ${passError ? "#fca5a5" : "#b0b0b0"}`,
+                outline: "none",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass((s) => !s)}
+              aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: "translateY(-50%)",
+                border: "none",
+                background: "transparent",
+                color: "#555",
+                cursor: "pointer",
+              }}
+              disabled={status === "loading"}
+            >
+              {showPass ? "Ocultar" : "Mostrar"}
+            </button>
+          </div>
+          {passError && (
+            <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 4 }}>
+              {passError}
+            </div>
+          )}
+          <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>
+            Mínimo 8 caracteres, con letras y números.
+          </div>
+        </div>
+
+        {/* Recordarme */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <label style={{ fontSize: 14, display: "inline-flex", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              disabled={status === "loading"}
+            />
+            Recordarme
+          </label>
+          <button
+            type="button"
+            onClick={() => alert("Recupero de contraseña: a implementar")}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "#2563eb",
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
+          disabled={!formValid || status === "loading"}
           style={{
-            width: '100%',
-            padding: '10px 0',
+            width: "100%",
+            padding: "10px 0",
             borderRadius: 6,
-            border: 'none',
-            background: '#2563eb',
-            color: '#fff',
-            fontWeight: 'bold',
+            border: "none",
+            background: !formValid || status === "loading" ? "#93c5fd" : "#2563eb",
+            color: "#fff",
+            fontWeight: "bold",
             fontSize: 16,
-            cursor: status === 'loading' ? 'wait' : 'pointer',
-            opacity: status === 'loading' ? 0.7 : 1
+            cursor: !formValid || status === "loading" ? "not-allowed" : "pointer",
+            opacity: status === "loading" ? 0.85 : 1,
+            transition: "background .15s",
           }}
-          disabled={status === 'loading'}
         >
-          {status === 'loading' ? 'Ingresando...' : 'Ingresar'}
+          {status === "loading" ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
     </div>
   );
 }
-
-export default Login;

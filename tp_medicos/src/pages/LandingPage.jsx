@@ -46,7 +46,7 @@ export default function Landing() {
         viewport={{ once: true }}
         className="w-full mb-14"
       >
-        <div className="max-w-5xl w-full mx-auto px-4">
+        <div className="max-w-5xl w-full mx-auto px-4 text-align-center">
           <Beneficios />
         </div>
       </motion.div>

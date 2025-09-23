@@ -15,7 +15,7 @@ export default function Header() {
         <span className="font-bold text-2xl tracking-wide">Dr. Enrique Martínez</span>
       </div>
       <nav className="flex items-center gap-6 text-md">
-        <Link to="/menu" className="hover:text-blue-600 transition">Menú</Link>
+        <Link to="/" className="hover:text-blue-600 transition">Menú</Link>
         <Link to="/citas" className="hover:text-blue-600 transition">
           {user ? "Ver Citas" : "Reservar Citas"}
         </Link>

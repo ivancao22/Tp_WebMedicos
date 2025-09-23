@@ -32,7 +32,7 @@ export default function TestimonialSlider() {
               <img
                 src={t.foto}
                 alt={`Foto de ${t.nombre}`}
-                className="w-20 h-20 rounded-full mb-4 object-cover border-4 border-blue-100 shadow"
+                className="w-20 h-20 rounded-full mb-4 object-cover ring-4 ring-blue-100 shadow"
                 style={{ backgroundColor: "#e5edfa" }}
               />
               <p className="text-gray-700 text-base italic mb-4 text-center">
