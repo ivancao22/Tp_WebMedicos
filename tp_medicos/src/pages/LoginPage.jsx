@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const mockApiLogin = ({ username, password }) =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // Simulación: usuario "admin" y contraseña "1234" son válidos
-      if (username === 'admin' && password === '1234') {
-        resolve({ status: 200, message: 'Login exitoso' });
-      } else {
-        reject({ status: 401, message: 'Usuario o contraseña incorrectos' });
-      }
-    }, 1200);
-  });
-
-const Login = () => {
+export function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
@@ -42,9 +34,14 @@ const Login = () => {
     setStatus('loading');
     setError('');
     try {
-      const res = await mockApiLogin({ username, password });
-      setStatus('success');
-      alert(res.message); // Aquí podrías redirigir o guardar el token
+      const res = await login({ username, password });
+      if (res.status === 200) {
+        setStatus('success');
+        navigate('/reservar-citas'); // Redirige directo al área admin
+      } else {
+        setStatus('error');
+        setError(res.message || 'Error desconocido');
+      }
     } catch (err) {
       setStatus('error');
       setError(err.message || 'Error desconocido');
@@ -129,6 +126,6 @@ const Login = () => {
       </form>
     </div>
   );
-};
+}
 
 export default Login;

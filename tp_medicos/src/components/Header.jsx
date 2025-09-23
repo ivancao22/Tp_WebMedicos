@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { HiOutlineUser } from "react-icons/hi";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Header() {
+  const { user } = useAuth();
+
   return (
     <header className="bg-blue-50 text-blue-900 flex items-center justify-between px-8 py-4 shadow">
       <div className="flex items-center gap-3">
@@ -13,9 +16,11 @@ export default function Header() {
       </div>
       <nav className="flex items-center gap-6 text-md">
         <Link to="/menu" className="hover:text-blue-600 transition">Menú</Link>
-        <Link to="/reservar-citas" className="hover:text-blue-600 transition">Reservar Citas</Link>
+        <Link to="/citas" className="hover:text-blue-600 transition">
+          {user ? "Ver Citas" : "Reservar Citas"}
+        </Link>
         <Link to="/obras-sociales" className="hover:text-blue-600 transition">Obras Sociales</Link>
-        <Link to="/about" className="hover:text-blue-600 transition">Sobre mí</Link>
+        <Link to="/about-us" className="hover:text-blue-600 transition">About us</Link>
         <Link 
           to="/login" 
           className="flex items-center gap-2 px-3 py-1 rounded-full border border-blue-700 bg-white text-blue-700 hover:bg-blue-100 transition shadow-sm"
