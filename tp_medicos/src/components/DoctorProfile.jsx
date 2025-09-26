@@ -3,7 +3,7 @@ import doctorPicture from '../assets/Doctor.jpg'; // Ajusta la ruta si es necesa
 
 export default function DoctorProfile() {
   return (
-    <section className="w-full bg-gradient-to-r from-blue-50 to-white">
+    <section className="w-full bg-gradient-to-r from-blue-50">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center min-h-[510px] md:min-h-[540px]">
         {/* Texto del doctor */}
         <div className="px-6 md:px-12 lg:px-16 py-10 order-2 md:order-1">

@@ -13,7 +13,7 @@ const reveal = {
 
 export default function Landing() {
   return (
-    <section className="flex flex-col items-center bg-gradient-to-b from-blue-50 via-white to-white min-h-screen">
+    <section className="flex flex-col items-center bg-blue-50 min-h-screen">
       {/* Presentación del doctor */}
       <motion.div
         variants={reveal}
@@ -22,6 +22,7 @@ export default function Landing() {
         viewport={{ once: true }}
         className="mb-14"
       >
+        {/* Si DoctorProfile tiene botones rosa/blanco, adentro cámbialos a azules */}
         <DoctorProfile />
       </motion.div>
 
@@ -31,7 +32,7 @@ export default function Landing() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="w-full bg-[#f6f9ff] py-10 mb-14"
+        className="w-full bg-blue-50 py-10 mb-14"
       >
         <div className="max-w-6xl mx-auto">
           <Servicios />
@@ -46,7 +47,7 @@ export default function Landing() {
         viewport={{ once: true }}
         className="w-full mb-14"
       >
-        <div className="max-w-5xl w-full mx-auto px-4 text-align-center">
+        <div className="max-w-5xl w-full mx-auto px-4">
           <Beneficios />
         </div>
       </motion.div>
@@ -72,13 +73,26 @@ export default function Landing() {
         viewport={{ once: true }}
         className="w-full max-w-2xl mb-14 px-4"
       >
-        <h3 className="text-xl font-semibold text-pink-600 mb-2 text-center">Contacto</h3>
-        <ContactoForm />
-        <div className="mt-6 text-center">
-          <p>Tel: <a href="tel:1122334455" className="text-pink-700">11 2233-4455</a></p>
-          <p>Email: <a href="mailto:dra.estetica@ejemplo.com" className="text-pink-700">dra.estetica@ejemplo.com</a></p>
-          <p>Consultorio: Edificio Polo Dot - Vedia 3626, CABA, Oficina 512</p>
-          <p>Horarios: Lunes a Viernes 9 a 18 hs.</p>
+        <h3 className="text-xl font-semibold text-blue-700 mb-2 text-center">Contacto</h3>
+        {/* Card clara sobre fondo azul */}
+        <div className="rounded-xl bg-white/90 backdrop-blur border border-blue-200 p-4 shadow">
+          <ContactoForm />
+          <div className="mt-6 text-center text-blue-800">
+            <p>
+              Tel:{" "}
+              <a href="tel:1122334455" className="text-blue-700 hover:text-blue-800 underline">
+                11 2233-4455
+              </a>
+            </p>
+            <p>
+              Email:{" "}
+              <a href="mailto:dra.estetica@ejemplo.com" className="text-blue-700 hover:text-blue-800 underline">
+                dra.estetica@ejemplo.com
+              </a>
+            </p>
+            <p>Consultorio: Edificio Polo Dot - Vedia 3626, CABA, Oficina 512</p>
+            <p>Horarios: Lunes a Viernes 9 a 18 hs.</p>
+          </div>
         </div>
       </motion.div>
 
@@ -104,12 +118,13 @@ export default function Landing() {
 
       {/* Login administrativo */}
       <div className="mb-8">
-        <Link to="/login" className="text-sm text-gray-500 hover:text-pink-600 underline">
+        <Link to="/login" className="text-sm text-blue-800 hover:text-blue-900 underline">
           Acceso para médico/secretaría
         </Link>
       </div>
-      {/* Footer */}
-      <footer className="w-full py-4 bg-pink-50 text-pink-600 text-center text-xs border-t">
+
+      {/* Footer azul */}
+      <footer className="w-full py-4 bg-blue-900 text-blue-100 text-center text-xs border-t border-blue-800">
         &copy; {new Date().getFullYear()} Dra. Julieta Pérez | Medicina Estética | Todos los derechos reservados
       </footer>
     </section>
