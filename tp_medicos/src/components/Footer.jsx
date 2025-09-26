@@ -18,11 +18,11 @@ export default function Footer() {
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex items-center gap-2">
             <HiOutlinePhone className="w-5 h-5 text-blue-700" />
-            <span>(+54) 11 5555-5555</span>
+            <span>(+54) 11 9812-8764</span>
           </div>
           <div className="flex items-center gap-2">
             <HiOutlineMail className="w-5 h-5 text-blue-700" />
-            <span>contacto@drmartinez.com</span>
+            <span>drmartinez@gmail.com</span>
           </div>
           {/* Redes */}
           <div className="flex gap-4 mt-2">
