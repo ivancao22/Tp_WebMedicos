@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
 
   // Solo staff puede loguear
   const login = ({ username, password }) => {
-    if (username === "admin" && password === "1234") {
+    if (username === "admin" && password === "admin1234") {
       setUser({ username, role: "admin" });
       return { status: 200 };
     }
