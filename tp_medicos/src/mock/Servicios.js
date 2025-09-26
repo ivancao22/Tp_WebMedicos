@@ -1,10 +1,9 @@
-import acidoHialuronicoImg from "../assets/AcidoHialuronico.jpg";
-import botoxImg from "../assets/Botox.jpg";
-import depilacionImg from "../assets/Depilacion.jpg";
-import limpiezaFacialImg from "../assets/LimpiezaFacial.jpg";
-import mesoterapiaImg from "../assets/Mesoterapia.jpg";
-import peelingImg from "../assets/Peeling.jpg";
-import plasmaImg from "../assets/Plasma.jpg";
+import acidoHialuronicoImg from "../assets/landing/AcidoHialuronico.jpg";
+import botoxImg from "../assets/landing/Botox.jpg";
+import depilacionImg from "../assets/landing/Depilacion.jpg";
+import mesoterapiaImg from "../assets/landing/Mesoterapia.jpg";
+import peelingImg from "../assets/landing/Peeling.jpg";
+import plasmaImg from "../assets/landing/Plasma.jpg";
 
 const servicios = [
   {
