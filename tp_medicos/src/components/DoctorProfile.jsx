@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import doctorPicture from '../assets/Doctor.jpg'; // Ajusta la ruta si es necesario
+import doctorPicture from '../assets/landing/Doctor.jpg'; // Ajusta la ruta si es necesario
 
 export default function DoctorProfile() {
   return (
