@@ -20,7 +20,7 @@ export default function Landing() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="mb-14"
+        className="mb-14 w-full "
       >
         {/* Si DoctorProfile tiene botones rosa/blanco, adentro cámbialos a azules */}
         <DoctorProfile />

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { HiOutlineUser, HiUserCircle } from "react-icons/hi";
+import { HiOutlineUser } from "react-icons/hi";
 import { useAuth } from "../auth/AuthContext";
 import { useState, useRef, useEffect } from "react";
 
@@ -7,15 +7,14 @@ export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showLoginButton, setShowLoginButton] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false); // 👈 nuevo estado
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const loginZoneRef = useRef();
 
-  // Ocultar login si haces click fuera de la zona
   useEffect(() => {
     function handleClick(e) {
       if (loginZoneRef.current && !loginZoneRef.current.contains(e.target)) {
         setShowLoginButton(false);
-        setShowUserMenu(false); // 👈 también cerrar el menú del usuario
+        setShowUserMenu(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -28,24 +27,36 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-blue-50 text-blue-900 flex items-center justify-between px-8 py-4 relative transition-all duration-300">
-      <div className="flex items-center gap-3">
-        {/* Logo SVG */}
+    <header
+      className={
+        // ✅ cambia a columna en móvil; fila en >=sm
+        "bg-blue-50 text-blue-900 flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-8 py-3 sm:py-4 relative gap-2 sm:gap-0"
+      }
+    >
+      {/* Logo + título */}
+      <div className="flex items-center gap-3 min-w-0">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 32 32"
-          className="w-8 h-8 text-blue-800"
+          className="w-7 h-7 sm:w-8 sm:h-8 text-blue-800 shrink-0"
           fill="currentColor"
         >
-          {/* ...icon... */}
+          <path d="M23 20a1 1 0 0 0-1 1 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.94V30a2 2 0 0 0 4 0v-1.06A8 8 0 0 0 24 21a1 1 0 0 0-1-1Zm-5 9a1 1 0 0 1-2 0v-1.05a8.1 8.1 0 0 0 2 0Zm1-.13V28a1 1 0 0 1-2 0v-.13a6 6 0 0 1-5-5.87V21h12v1a6 6 0 0 1-5 5.87ZM19 18h-6a1 1 0 0 1-1-1v-7.22A7 7 0 0 1 19 10v7a1 1 0 0 1-1 1Zm-7-9a5 5 0 0 0-5 5v7a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-7a5 5 0 0 0-5-5Z" />
         </svg>
-        <span className="font-bold text-2xl tracking-wide">
+        <span className="font-bold text-xl sm:text-2xl tracking-wide truncate">
           Dr. Enrique Martínez
         </span>
       </div>
 
-      {/* NAV PRINCIPAL */}
-      <nav className="flex items-center gap-6 text-md" ref={loginZoneRef}>
+      {/* NAV: en móvil baja debajo del título, con wrap */}
+      <nav
+        ref={loginZoneRef}
+        className="
+          flex flex-wrap items-center justify-start gap-x-4 gap-y-2 
+          text-sm sm:text-base 
+          sm:justify-end
+        "
+      >
         <Link to="/" className="hover:text-blue-600 transition">
           Menú
         </Link>
@@ -62,19 +73,17 @@ export default function Header() {
         {/* Usuario logueado */}
         {user ? (
           <div className="relative">
-            {/* Avatar redondito */}
             <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-700 text-white font-bold text-lg hover:opacity-90 transition"
+              onClick={() => setShowUserMenu((v) => !v)}
+              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-blue-700 text-white font-bold text-base sm:text-lg hover:opacity-90 transition"
               aria-label="Menú usuario"
             >
               {user.username[0].toUpperCase()}
             </button>
 
-            {/* Popup menú */}
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
-                <p className="px-4 py-2 text-sm text-gray-700 border-b">
+                <p className="px-4 py-2 text-sm text-gray-700 border-b truncate">
                   {user.username}
                 </p>
                 <button
@@ -87,7 +96,7 @@ export default function Header() {
             )}
           </div>
         ) : (
-          /* Botón Login */
+          // Botón Login (se mantiene tu lógica de "pestañita")
           <button
             onClick={() => {
               setShowLoginButton(false);
@@ -103,7 +112,7 @@ export default function Header() {
         )}
       </nav>
 
-      {/* Pestañita discreta */}
+      {/* Pestañita para mostrar login (solo si no hay user) */}
       {!user && !showLoginButton && (
         <div
           style={{
@@ -124,7 +133,7 @@ export default function Header() {
           onClick={() => setShowLoginButton(true)}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.5)}
-        ></div>
+        />
       )}
     </header>
   );
