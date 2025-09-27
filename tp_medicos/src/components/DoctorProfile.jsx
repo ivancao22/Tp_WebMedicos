@@ -15,12 +15,30 @@ export default function DoctorProfile() {
           <h2 className="text-lg text-blue-700 font-semibold mb-6">
             Médico Estético · MN 123456
           </h2>
-          <p className="text-gray-600 leading-relaxed mb-8">
-            Soy especialista en medicina estética con más de 10 años de experiencia en tratamientos faciales y corporales mínimamente invasivos, ayudando a mis pacientes a mejorar su salud, confianza y bienestar con resultados naturales y seguros.
-          </p>
-          <p className="text-gray-600 leading-relaxed mb-8">
-            En mi consultorio en Polo Dot, CABA, un espacio moderno con tecnología de vanguardia, trabajamos junto a un equipo de tres especialistas para brindar una atención integral, personalizada y de excelencia.
-          </p>
+          <p className="mt-4 text-gray-700 leading-relaxed">
+  Soy especialista en medicina estética con más de 15 años de experiencia en
+  tratamientos faciales y corporales mínimamente invasivos, ayudando a mis
+  pacientes a mejorar su salud, confianza y bienestar con resultados naturales
+  y seguros.
+</p>
+
+<p className="mt-4 text-gray-700 leading-relaxed">
+  En mi consultorio en Polo Dot, CABA, un espacio moderno con tecnología de
+  vanguardia, trabajamos junto a un equipo de tres especialistas para brindar
+  una atención integral, personalizada y de excelencia.
+</p>
+
+{/* Formación académica */}
+<div className="mt-6 bg-blue-100 p-4 rounded-lg shadow-sm">
+  <h3 className="text-lg font-semibold text-blue-800 mb-2">
+    Formación Académica
+  </h3>
+  <ul className="list-disc list-inside text-gray-700 leading-relaxed">
+    <li>Médico graduado en la Universidad de Buenos Aires (UBA).</li>
+    <li>Postgrado en Cirugía Plástica y Reparadora en la Asociación Médica Argentina.</li>
+  </ul>
+</div>
+
           {/* Botonera solo si NO hay usuario logueado */}
           {!user && (
           <div className="mt-6 flex gap-4">
