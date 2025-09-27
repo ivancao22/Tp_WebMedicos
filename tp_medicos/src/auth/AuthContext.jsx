@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
       setLogoutTimer(); // inicia timer
       return { status: 200 };
     }
-    if (username === "secretaria" && password === "abcd") {
+    if (username === "secretaria" && password === "abcd1234") {
       setUser({ username, role: "secretaria" });
       setLogoutTimer(); // inicia timer
       return { status: 200 };

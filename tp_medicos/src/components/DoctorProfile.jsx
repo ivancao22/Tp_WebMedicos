@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import doctorPicture from '../assets/landing/drMartinez.png'; // Ajusta la ruta si es necesario
+import { useAuth } from "../auth/AuthContext";
 
 export default function DoctorProfile() {
+  const { user } = useAuth();
   return (
     <section className="w-full bg-gradient-to-r from-blue-50">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center min-h-[510px] md:min-h-[540px]">
@@ -19,19 +21,23 @@ export default function DoctorProfile() {
           <p className="text-gray-600 leading-relaxed mb-8">
             En mi consultorio en Polo Dot, CABA, un espacio moderno con tecnología de vanguardia, trabajamos junto a un equipo de tres especialistas para brindar una atención integral, personalizada y de excelencia.
           </p>
-          <div className="flex flex-wrap gap-4">
-            <Link to="/citas"
-              className="bg-blue-700 text-white px-6 py-3 rounded-md font-semibold shadow hover:bg-blue-800 transition"
-            >
-              Reservar cita
-            </Link>
-            <Link
-              to="/obras-sociales"
-              className="border border-blue-700 text-blue-700 px-6 py-3 rounded-md font-semibold hover:bg-blue-50 transition"
-            >
-              Obras Sociales
-            </Link>
+          {/* Botonera solo si NO hay usuario logueado */}
+          {!user && (
+          <div className="mt-6 flex gap-4">
+          <Link
+            to="/citas"
+            className="px-5 py-3 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            Reservar cita
+          </Link>
+          <Link
+            to="/obras-sociales"
+            className="px-5 py-3 rounded-md border border-blue-600 text-blue-700 bg-white hover:bg-blue-50"
+          >
+            Obras Sociales
+          </Link>
           </div>
+          )}
         </div>
 
         {/* Imagen del doctor, tamaño intermedio y difuminado lateral */}

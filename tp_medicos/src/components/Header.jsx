@@ -28,7 +28,7 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-blue-50 text-blue-900 flex items-center justify-between px-8 py-4 shadow relative transition-all duration-300">
+    <header className="bg-blue-50 text-blue-900 flex items-center justify-between px-8 py-4 relative transition-all duration-300">
       <div className="flex items-center gap-3">
         {/* Logo SVG */}
         <svg
