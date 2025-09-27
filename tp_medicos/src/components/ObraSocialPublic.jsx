@@ -1,17 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
+import obrasEjemplo from '../mock/ObraSocial';
 
-import obrasEjemplo from '../mock/ObraSocial'
 export default function ObraSocialPublic() {
-  const [consulta, setConsulta] = useState("");
-  const [enviado, setEnviado] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setEnviado(true);
-    setConsulta("");
-    // Aquí podrías enviar la consulta a un mail/backend
-  };
-
   return (
     <div
       style={{
@@ -78,66 +68,38 @@ export default function ObraSocialPublic() {
             fontSize: "1.05rem",
             fontWeight: 500,
             color: "#2457A7",
-            marginBottom: 8,
+            marginBottom: 10,
             textAlign: "center"
           }}
         >
           ¿No encontrás tu obra social?
         </h3>
-        <form
-          onSubmit={handleSubmit}
+        <div
           style={{
+            marginTop: 4,
+            background: "#f4f8ff",
+            borderRadius: 8,
+            padding: "16px 18px",
+            color: "#1e293b",
+            textAlign: "center",
+            fontWeight: 500,
+            fontSize: "1.07rem",
+            boxShadow: "0 2px 8px #0001",
             display: "flex",
-            gap: 6,
-            marginTop: 10,
-            alignItems: "center",
-            justifyContent: "center"
+            flexDirection: "column",
+            alignItems: "center"
           }}
         >
-          <input
-            value={consulta}
-            onChange={(e) => setConsulta(e.target.value)}
-            placeholder="Escribí el nombre de tu obra social"
-            style={{
-              flex: 1,
-              border: "1px solid #bcd0ef",
-              borderRadius: 6,
-              padding: "8px 10px",
-              fontSize: "1rem",
-              outline: "none",
-              background: "#f4f8ff",
-              maxWidth: 270
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              background: "#2457A7",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              padding: "8px 16px",
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: ".2s",
-              boxShadow: "0 2px 8px rgba(30,64,175,0.05)"
-            }}
-          >
-            Consultar
-          </button>
-        </form>
-        {enviado && (
-          <p
-            style={{
-              color: "#18804b",
-              marginTop: 10,
-              textAlign: "center",
-              fontWeight: 500,
-            }}
-          >
-            ¡Gracias por tu consulta!
-          </p>
-        )}
+          <div style={{ marginBottom: 8 }}>
+            Contáctanos por correo a <b style={{ color: "#2457A7" }}>drMartinez@gmail.com</b>
+          </div>
+          <div style={{ marginBottom: 2 }}>
+            O por WhatsApp/llamada al <b style={{ color: "#2457A7" }}>11-3232-1212</b>
+          </div>
+          <div style={{ fontSize: "0.97rem", marginTop: 5 }}>
+            ¡Estamos para ayudarte!
+          </div>
+        </div>
       </div>
     </div>
   );
