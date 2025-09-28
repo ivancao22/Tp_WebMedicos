@@ -4,19 +4,28 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+const USER_KEY = "medico_app_user";
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // { username, role }
+  const [user, setUser] = useState(() => {
+    // Recupera user guardado si existe
+    const stored = localStorage.getItem(USER_KEY);
+    return stored ? JSON.parse(stored) : null;
+  });
   const logoutTimerRef = useRef();
 
   // Solo staff puede loguear
   const login = ({ username, password }) => {
+    let validUser = null;
     if (username === "admin" && password === "admin1234") {
-      setUser({ username, role: "admin" });
-      setLogoutTimer(); // inicia timer
-      return { status: 200 };
+      validUser = { username, role: "admin" };
     }
     if (username === "secretaria" && password === "abcd1234") {
-      setUser({ username, role: "secretaria" });
+      validUser = { username, role: "secretaria" };
+    }
+    if (validUser) {
+      setUser(validUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(validUser));
       setLogoutTimer(); // inicia timer
       return { status: 200 };
     }
@@ -25,6 +34,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem(USER_KEY);
     if (logoutTimerRef.current) {
       clearTimeout(logoutTimerRef.current);
       logoutTimerRef.current = null;
@@ -36,6 +46,7 @@ export function AuthProvider({ children }) {
     if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
     logoutTimerRef.current = setTimeout(() => {
       setUser(null);
+      localStorage.removeItem(USER_KEY);
       logoutTimerRef.current = null;
       alert("Por seguridad, tu sesión ha sido cerrada automáticamente después de 12 horas.");
     }, 43200000);

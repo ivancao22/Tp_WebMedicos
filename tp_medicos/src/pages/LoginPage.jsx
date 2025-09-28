@@ -47,7 +47,7 @@ export default function Login() {
       const res = await login({ username, password, remember });
       if (res?.status === 200) {
         setStatus("success");
-        navigate("/reservar-citas");
+        navigate("/");
       } else {
         throw new Error(res?.message || "Credenciales inválidas");
       }

@@ -150,7 +150,7 @@ const MemberCard = ({ photo, name, role }) => (
             />
             <MemberCard
               photo={medico3}
-              name="Dr. Enrique Martínez"
+              name="Dr. Facundo Guzman"
               role="Cirujano Plástico - Experto en procedimientos mínimamente invasivos"
             />
           </div>
