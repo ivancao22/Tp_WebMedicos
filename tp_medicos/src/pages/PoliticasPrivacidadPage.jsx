@@ -1,5 +1,7 @@
 import { Box, Paper, Typography } from "@mui/material";
 
+// Página de políticas de privacidad, con diseño limpio y responsivo.
+// Explica cómo se manejan los datos de los usuarios en el sitio.
 export default function PoliticasPrivacidad() {
   return (
     <Box
@@ -12,6 +14,7 @@ export default function PoliticasPrivacidad() {
         py: 6,
       }}
     >
+      {/* Card blanca principal */}
       <Paper
         elevation={8}
         sx={{
@@ -22,6 +25,7 @@ export default function PoliticasPrivacidad() {
           boxShadow: "0 8px 32px #0002",
         }}
       >
+        {/* Título grande centrado */}
         <Typography
           variant="h4"
           align="center"
@@ -29,6 +33,7 @@ export default function PoliticasPrivacidad() {
         >
           Políticas de Privacidad
         </Typography>
+        {/* Contenido principal, scroll si hay mucho texto */}
         <Box
           sx={{
             maxHeight: "65vh",
@@ -36,6 +41,7 @@ export default function PoliticasPrivacidad() {
             px: 1,
           }}
         >
+          {/* Explicación y puntos principales */}
           <Typography variant="body1" sx={{ mb: 2, color: "#222" }}>
             En nuestro sitio web, la privacidad de nuestros usuarios es una prioridad. A continuación, se detallan nuestras políticas de privacidad:
           </Typography>

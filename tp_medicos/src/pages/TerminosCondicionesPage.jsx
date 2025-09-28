@@ -1,5 +1,7 @@
 import { Box, Paper, Typography } from "@mui/material";
 
+// Página de Términos y Condiciones.
+// Muestra las reglas para usar el sitio y cómo se maneja la privacidad, cambios, propiedad y contacto.
 export default function TerminosCondiciones() {
   return (
     <Box
@@ -12,6 +14,7 @@ export default function TerminosCondiciones() {
         py: 6,
       }}
     >
+      {/* Card blanca central para el contenido */}
       <Paper
         elevation={8}
         sx={{
@@ -22,6 +25,7 @@ export default function TerminosCondiciones() {
           boxShadow: "0 8px 32px #0002",
         }}
       >
+        {/* Título en azul, centrado y grande */}
         <Typography
           variant="h4"
           align="center"
@@ -29,6 +33,7 @@ export default function TerminosCondiciones() {
         >
           Términos y Condiciones
         </Typography>
+        {/* Contenido principal con scroll si es largo */}
         <Box
           sx={{
             maxHeight: "65vh",
@@ -36,9 +41,11 @@ export default function TerminosCondiciones() {
             px: 1,
           }}
         >
+          {/* Breve introducción al texto */}
           <Typography variant="body1" sx={{ mb: 2, color: "#222" }}>
             Bienvenido a nuestro sitio web. Al utilizar nuestros servicios, usted acepta los siguientes términos y condiciones:
           </Typography>
+          {/* Puntos principales de los términos */}
           <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>
             1. Uso del sitio
           </Typography>

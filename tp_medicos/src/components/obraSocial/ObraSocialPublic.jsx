@@ -1,6 +1,9 @@
 import React from "react";
 import obrasEjemplo from '../../mock/ObraSocial';
 
+// Esta página muestra la lista de obras sociales con las que trabaja el consultorio.
+// Es solo informativa, para que los pacientes puedan consultar si su cobertura está incluida.
+// Si no la encuentran, les damos los datos de contacto para que puedan consultar.
 export default function ObraSocialPublic() {
   return (
     <div
@@ -14,6 +17,7 @@ export default function ObraSocialPublic() {
         minHeight: 420,
       }}
     >
+      {/* Título principal */}
       <h2
         style={{
           fontSize: "1.4rem",
@@ -26,6 +30,7 @@ export default function ObraSocialPublic() {
       >
         Trabajamos con las siguientes obras sociales
       </h2>
+      {/* Grid de obras sociales, cada una en su tarjetita */}
       <div
         style={{
           display: "flex",
@@ -56,6 +61,7 @@ export default function ObraSocialPublic() {
         ))}
       </div>
 
+      {/* Si el paciente no encuentra su obra social, mostramos los datos de contacto */}
       <div
         style={{
           borderTop: "1px solid #d1d5db",
@@ -91,10 +97,16 @@ export default function ObraSocialPublic() {
           }}
         >
           <div style={{ marginBottom: 8 }}>
-            Contáctanos por correo a <b style={{ color: "#2457A7" }}>drMartinez@gmail.com</b>
+            Contáctanos por correo a{" "}
+            <a href="mailto:drMartinez@gmail.com" style={{ color: "#2457A7", fontWeight: "bold" }}>
+              drMartinez@gmail.com
+            </a>
           </div>
           <div style={{ marginBottom: 2 }}>
-            O por WhatsApp/llamada al <b style={{ color: "#2457A7" }}>11-3232-1212</b>
+            O por WhatsApp/llamada al{" "}
+            <a href="tel:+541132321212" style={{ color: "#2457A7", fontWeight: "bold" }}>
+              11-3232-1212
+            </a>
           </div>
           <div style={{ fontSize: "0.97rem", marginTop: 5 }}>
             ¡Estamos para ayudarte!

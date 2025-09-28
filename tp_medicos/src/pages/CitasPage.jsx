@@ -6,7 +6,7 @@ import GestionCitas from "../components/citas/GestionCitas";
 export default function CitasPage() {
   const { user } = useAuth();
 
-  // Si hay usuario logueado (staff), mostrar gestión administrativa
+  // Si hay usuario logueado (medico/secretaria), mostrar gestión administrativa
   if (user) {
     return <GestionCitas />;
   }

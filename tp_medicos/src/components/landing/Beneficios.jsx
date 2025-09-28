@@ -1,5 +1,6 @@
 export default function Beneficios() {
   return (
+    //Aca simplemente se muestra un titulo y una lista en forma de cards con razones para elegir el estudio medico del dr. Martinez
     <div className="w-full max-w-3xl mb-10 px-4 mx-auto">
       <h3 className="text-xl font-semibold text-blue-800 mb-6 text-center">
         ¿Por qué elegirme?

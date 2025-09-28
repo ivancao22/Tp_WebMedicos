@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-
 import iniciales from '../../mock/ObraSocial'
 
+// Esta página es el panel de administración de obras sociales.
+// Permite agregar, editar y eliminar obras sociales de forma muy simple.
+// Los cambios solo afectan a la sesión actual (no hay backend, se maneja todo en memoria).
 export default function ObraSocialAdmin() {
-  const [obras, setObras] = useState(iniciales);
-  const [nuevo, setNuevo] = useState("");
-  const [editId, setEditId] = useState(null);
-  const [editNombre, setEditNombre] = useState("");
-  const [mensaje, setMensaje] = useState("");
+  const [obras, setObras] = useState(iniciales); // Lista de obras sociales
+  const [nuevo, setNuevo] = useState(""); // Nombre nuevo para agregar
+  const [editId, setEditId] = useState(null); // ID de la obra que se está editando
+  const [editNombre, setEditNombre] = useState(""); // Nombre editado
+  const [mensaje, setMensaje] = useState(""); // Mensaje de confirmación
 
+  // Agrega una obra social nueva
   const agregar = () => {
     if (!nuevo.trim()) return;
     setObras([...obras, { id: Date.now(), nombre: nuevo }]);
@@ -16,16 +19,19 @@ export default function ObraSocialAdmin() {
     mostrarMensaje("Obra social agregada");
   };
 
+  // Elimina una obra social por ID
   const eliminar = (id) => {
     setObras(obras.filter(o => o.id !== id));
     mostrarMensaje("Obra social eliminada");
   };
 
+  // Prepara el modo edición para una obra social existente
   const empezarEditar = (id, nombre) => {
     setEditId(id);
     setEditNombre(nombre);
   };
 
+  // Guarda los cambios de edición
   const guardarEdicion = () => {
     setObras(obras.map(o => o.id === editId ? { ...o, nombre: editNombre } : o));
     setEditId(null);
@@ -33,9 +39,10 @@ export default function ObraSocialAdmin() {
     mostrarMensaje("Obra social actualizada");
   };
 
+  // Muestra un mensaje temporal en pantalla
   const mostrarMensaje = (msg) => {
     setMensaje(msg);
-    setTimeout(() => setMensaje(""), 1800);
+    setTimeout(() => setMensaje(""), 1800); // El mensaje desaparece después de 1.8 segundos
   };
 
   return (
@@ -50,6 +57,7 @@ export default function ObraSocialAdmin() {
         minHeight: 420,
       }}
     >
+      {/* Título principal */}
       <h2
         style={{
           fontSize: "1.3rem",
@@ -62,6 +70,7 @@ export default function ObraSocialAdmin() {
         Administración de Obras Sociales
       </h2>
 
+      {/* Formulario para agregar una nueva obra social */}
       <div style={{ display: "flex", gap: 8, marginBottom: 24, justifyContent: "center" }}>
         <input
           value={nuevo}
@@ -95,6 +104,7 @@ export default function ObraSocialAdmin() {
         </button>
       </div>
 
+      {/* Lista de obras sociales con opciones de editar y eliminar */}
       <div style={{
         background: "white",
         borderRadius: 12,
@@ -116,6 +126,7 @@ export default function ObraSocialAdmin() {
                 borderBottom: "1px solid #f2f2f2"
               }}
             >
+              {/* Si se está editando, muestra input y botones de guardar/cancelar */}
               {editId === obra.id ? (
                 <>
                   <input
@@ -159,7 +170,9 @@ export default function ObraSocialAdmin() {
                 </>
               ) : (
                 <>
+                  {/* Nombre de la obra social */}
                   <span style={{ flex: 1, fontWeight: 500, color: "#1e293b" }}>{obra.nombre}</span>
+                  {/* Botón para editar */}
                   <button
                     style={{
                       background: "#f0f6ff",
@@ -174,6 +187,7 @@ export default function ObraSocialAdmin() {
                   >
                     Editar
                   </button>
+                  {/* Botón para eliminar */}
                   <button
                     style={{
                       background: "#ffe1e1",
@@ -193,12 +207,14 @@ export default function ObraSocialAdmin() {
             </li>
           )}
         </ul>
+        {/* Mensaje si no hay obras sociales cargadas */}
         {obras.length === 0 && (
           <div style={{ textAlign: "center", color: "#999" }}>
             No hay obras sociales cargadas.
           </div>
         )}
       </div>
+      {/* Mensaje de confirmación de acción (agregado, editado, eliminado) */}
       {mensaje && (
         <div
           style={{
