@@ -1,6 +1,6 @@
 import { useAuth } from "../auth/AuthContext";
-import ObraSocialAdmin from "../components/ObraSocialAdmin";
-import ObraSocialPublic from "../components/ObraSocialPublic";
+import ObraSocialAdmin from "../components/obraSocial/ObraSocialAdmin";
+import ObraSocialPublic from "../components/obraSocial/ObraSocialPublic";
 
 export default function ObrasSocialesPage() {
   const { user } = useAuth();

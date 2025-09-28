@@ -1,11 +1,13 @@
 import './App.css';
-import Header from './components/Header.jsx';
-import Footer from './components/Footer.jsx';
+import Header from './components/generics/Header.jsx';
+import Footer from './components/generics/Footer.jsx';
 import Landing from './pages/LandingPage.jsx';
 import Login from './pages/LoginPage.jsx';
 import CitasPage from './pages/CitasPage.jsx';
 import ObrasSociales from './pages/ObrasSocialesPage.jsx';
 import AboutUs from './pages/AboutUsPage.jsx';
+import TerminosCondiciones from './pages/TerminosCondicionesPage.jsx'
+import PoliticasPrivacidad from './pages/PoliticasPrivacidadPage.jsx';
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider } from './auth/AuthContext.jsx';
 
@@ -16,7 +18,9 @@ function AppContent() {
     '/reservar-citas',
     '/obras-sociales',
     '/about-us',
-    '/citas'
+    '/citas',
+    '/terminos-condiciones',
+    '/politicas-privacidad'
   ];
 
   return (
@@ -29,7 +33,8 @@ function AppContent() {
           <Route path="/citas" element={<CitasPage />} />
           <Route path="/obras-sociales" element={<ObrasSociales />} />
           <Route path="/about-us" element={<AboutUs />} />
-
+          <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
+          <Route path="/politicas-privacidad" element={<PoliticasPrivacidad />} />
         </Routes>
       </main>
       {!hideFooterRoutes.includes(location.pathname) && <Footer />}

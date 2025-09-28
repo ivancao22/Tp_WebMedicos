@@ -1,5 +1,5 @@
 import React from "react";
-import obrasEjemplo from '../mock/ObraSocial';
+import obrasEjemplo from '../../mock/ObraSocial';
 
 export default function ObraSocialPublic() {
   return (

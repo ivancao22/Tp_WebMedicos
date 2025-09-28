@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import obrasSociales from "../mock/ObraSocial";
-import medicos from "../mock/Medicos";
-import motivosCita from "../mock/MotivosCita";
+import obrasSociales from "../../mock/ObraSocial";
+import medicos from "../../mock/Medicos";
+import motivosCita from "../../mock/MotivosCita";
 import {
   TextField, Button, MenuItem, Box, Typography, Paper, Grid, Tooltip
 } from '@mui/material';
@@ -54,14 +54,14 @@ export default function SolicitarCita() {
   });
   const [errores, setErrores] = useState({});
 
-  // Mensaje de éxito temporal
+  // Mensaje de éxito temporal (10 segundos)
   useEffect(() => {
     if (mensaje) {
       setShowMensaje(true);
       const timer = setTimeout(() => {
         setShowMensaje(false);
         setMensaje('');
-      }, 2000);
+      }, 10000); // <-- 10 segundos
       return () => clearTimeout(timer);
     }
   }, [mensaje]);
@@ -305,6 +305,7 @@ export default function SolicitarCita() {
                 onChange={handleFecha}
                 shouldDisableDate={disableWeekends}
                 minDate={dayjs()}
+                maxDate={dayjs().add(14, 'day')} // <-- SOLO dos semanas
                 disabled={!form.medico}
                 sx={{
                   width: "100%",
@@ -317,54 +318,54 @@ export default function SolicitarCita() {
             </LocalizationProvider>
           </Grid>
           <Grid item xs={12} md={6}>
-  {form.fecha && (
-    <>
-      <Typography sx={{ fontWeight: 600, color: "#2563eb", mb: 1, textAlign: "center" }}>
-        Horarios disponibles
-      </Typography>
-      {horariosLibres().length === 0
-        ? <Typography color="warning.main" align="center">No hay horarios disponibles para este día.</Typography>
-        : (
-          <Box sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 1,
-            width: "100%",
-            justifyContent: "center"
-          }}>
-            {generarHorarios().map(hora => {
-              const ocupado = !horariosLibres().includes(hora);
-              return (
-                <Button
-                  key={hora}
-                  variant={form.hora === hora ? "contained" : "outlined"}
-                  color={ocupado ? "inherit" : "primary"}
-                  size="small"
-                  sx={{
-                    minWidth: 90,
-                    borderRadius: 2,
-                    fontWeight: 500,
-                    background: form.hora === hora && !ocupado ? "#2563eb" : "#fff",
-                    color: ocupado ? "#aaa" : undefined,
-                    px: 0,
-                    py: 1,
-                    cursor: ocupado ? "not-allowed" : "pointer"
-                  }}
-                  disabled={ocupado}
-                  onClick={() => !ocupado && handleHora(hora)}
-                >
-                  {hora}
-                </Button>
-              );
-            })}
-          </Box>
-        )}
-      <Typography color="error" fontSize={13} sx={{ minHeight: 20, textAlign: "center" }}>
-        {errores.hora || " "}
-      </Typography>
-    </>
-  )}
-</Grid>
+            {form.fecha && (
+              <>
+                <Typography sx={{ fontWeight: 600, color: "#2563eb", mb: 1, textAlign: "center" }}>
+                  Horarios disponibles
+                </Typography>
+                {horariosLibres().length === 0
+                  ? <Typography color="warning.main" align="center">No hay horarios disponibles para este día.</Typography>
+                  : (
+                    <Box sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: 1,
+                      width: "100%",
+                      justifyContent: "center"
+                    }}>
+                      {generarHorarios().map(hora => {
+                        const ocupado = !horariosLibres().includes(hora);
+                        return (
+                          <Button
+                            key={hora}
+                            variant={form.hora === hora ? "contained" : "outlined"}
+                            color={ocupado ? "inherit" : "primary"}
+                            size="small"
+                            sx={{
+                              minWidth: 90,
+                              borderRadius: 2,
+                              fontWeight: 500,
+                              background: form.hora === hora && !ocupado ? "#2563eb" : "#fff",
+                              color: ocupado ? "#aaa" : undefined,
+                              px: 0,
+                              py: 1,
+                              cursor: ocupado ? "not-allowed" : "pointer"
+                            }}
+                            disabled={ocupado}
+                            onClick={() => !ocupado && handleHora(hora)}
+                          >
+                            {hora}
+                          </Button>
+                        );
+                      })}
+                    </Box>
+                  )}
+                <Typography color="error" fontSize={13} sx={{ minHeight: 20, textAlign: "center" }}>
+                  {errores.hora || " "}
+                </Typography>
+              </>
+            )}
+          </Grid>
         </Grid>
 
         {/* Botón centrado */}

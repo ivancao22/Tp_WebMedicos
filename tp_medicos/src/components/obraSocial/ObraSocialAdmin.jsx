@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import iniciales from '../mock/ObraSocial'
+import iniciales from '../../mock/ObraSocial'
 
 export default function ObraSocialAdmin() {
   const [obras, setObras] = useState(iniciales);

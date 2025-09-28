@@ -85,45 +85,57 @@ const MemberCard = ({ photo, name, role }) => (
           }}
         >
           {/* Texto */}
-          <div style={{ flex: "1 1 360px", minWidth: 300 }}>
-            <h1 style={{ color: "#2563eb", fontSize: 38, marginBottom: 14 }}>
-              Sobre Nosotros
-            </h1>
+         {/* Texto */}
+<div style={{ flex: "1 1 360px", minWidth: 300 }}>
+  <h1 style={{ color: "#2563eb", fontSize: 38, marginBottom: 14 }}>
+    Sobre Nosotros
+  </h1>
 
-            <p style={{ fontSize: 18, lineHeight: 1.6, marginBottom: 14 }}>
-              Somos un equipo de profesionales apasionados por transformar la
-              forma en que los pacientes acceden a la atención médica.
-              Combinamos tecnología de vanguardia con un trato cercano y humano,
-              creando un espacio confiable y accesible para gestionar turnos
-              médicos de manera ágil y segura.
-            </p>
+  <p style={{ fontSize: 18, lineHeight: 1.6, marginBottom: 14 }}>
+    Hola, soy el Dr. Enrique Martínez, médico estético y fundador de este estudio. 
+    Hace más de 30 años inicié mis estudios de medicina en la Universidad de Buenos Aires, 
+    y pronto descubrí mi pasión por la estética y la cirugía plástica.
+  </p>
 
-            <h2 style={{ color: "#2563eb", fontSize: 20, margin: "14px 0 8px" }}>
-              Nuestra Misión
-            </h2>
-            <p style={{ fontSize: 16.5, lineHeight: 1.6, marginBottom: 10 }}>
-              Nuestra misión es facilitar el acceso al sistema de salud a través
-              de una plataforma moderna, intuitiva y eficiente, que conecta a
-              pacientes y especialistas en un mismo lugar. Ofrecemos herramientas
-              digitales que simplifican la gestión de turnos, historias clínicas
-              y recordatorios, siempre priorizando la seguridad, la privacidad y
-              la atención personalizada.
-            </p>
-          </div>
+  <p style={{ fontSize: 18, lineHeight: 1.6, marginBottom: 14 }}>
+    Tuve la oportunidad de formarme y adquirir experiencia en el Hospital de Clínicas 
+    "José de San Martín" y en el Hospital Italiano de Buenos Aires, lo que me permitió 
+    crecer junto a grandes profesionales.
+  </p>
 
-          {/* Imagen de grupo */}
-          <div style={{ flex: "1 1 260px", minWidth: 240, textAlign: "center" }}>
-            <img
-              src={equipoMedico}
-              alt="Equipo médico"
-              style={{
-                width: "90%",
-                maxWidth: 340,
-                borderRadius: 12,
-                boxShadow: "0 2px 16px #0001",
-              }}
-            />
-          </div>
+  <p style={{ fontSize: 18, lineHeight: 1.6, marginBottom: 14 }}>
+    En 2010 cumplí el sueño de crear el Estudio Médico Enrique Martínez, con la misión 
+    de ofrecer un espacio cercano y confiable donde cada paciente reciba una atención 
+    personalizada. Hoy, a mis 56 años, sigo trabajando con la misma vocación, acompañado 
+    por un equipo comprometido en brindar resultados seguros y naturales.
+  </p>
+</div>
+
+
+  {/* Imagen de grupo */}
+<div
+  style={{
+    flex: "1 1 320px",
+    minWidth: 260,
+    textAlign: "center",
+    marginTop: "45px", // 👈 bajamos la imagen respecto al título
+  }}
+>
+  <img
+    src={equipoMedico}
+    alt="Equipo médico"
+    style={{
+      width: "95%",
+      maxWidth: 380,
+      height: "500px",
+      objectFit: "cover",
+      borderRadius: 16,
+      boxShadow: "0 2px 16px #0001",
+    }}
+  />
+</div>
+
+
         </section>
 
         {/* NUESTRO EQUIPO */}

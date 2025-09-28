@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../auth/AuthContext";
-import SolicitarCita from "../components/SolicitarCita";
-import GestionCitas from "../components/GestionCitas";
+import SolicitarCita from "../components/citas/SolicitarCita";
+import GestionCitas from "../components/citas/GestionCitas";
 
 export default function CitasPage() {
   const { user } = useAuth();

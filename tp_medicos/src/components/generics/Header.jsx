@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { HiOutlineUser } from "react-icons/hi";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 import { useState, useRef, useEffect } from "react";
 
 export default function Header() {

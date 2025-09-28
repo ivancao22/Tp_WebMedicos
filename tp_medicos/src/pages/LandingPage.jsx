@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import DoctorProfile from "../components/DoctorProfile";
-import Servicios from "../components/Servicios";
-import Beneficios from "../components/Beneficios";
-import TestimonialSlider from "../components/TestimonialSliders";
+import DoctorProfile from "../components/landing/DoctorProfile";
+import Servicios from "../components/landing/Servicios";
+import Beneficios from "../components/landing/Beneficios";
+import TestimonialSlider from "../components/landing/TestimonialSliders";
 import { Link } from "react-router-dom";
 
 
@@ -173,12 +173,6 @@ export default function Landing() {
 
       
 
-      {/* Login administrativo */}
-      <div className="mb-8">
-        <Link to="/login" className="text-sm text-blue-800 hover:text-blue-900 underline">
-          Acceso para médico/secretaría
-        </Link>
-      </div>
     </section>
   );
 }

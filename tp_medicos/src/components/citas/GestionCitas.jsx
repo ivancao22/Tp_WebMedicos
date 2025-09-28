@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { citasIniciales } from "../mock/Citas";
-import PopUpAlertas from "./utils/PopUpAlerta";
+import { citasIniciales } from "../../mock/Citas";
+import PopUpAlertas from "../utils/PopUpAlerta";
 
 // Simulación de persistencia en localStorage
 const LOCAL_KEY = "citas_mock_storage";

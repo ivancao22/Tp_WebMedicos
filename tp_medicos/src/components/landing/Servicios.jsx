@@ -1,4 +1,4 @@
-import servicios from "../mock/Servicios";
+import servicios from "../../mock/Servicios";
 
 export default function Servicios() {
   return (

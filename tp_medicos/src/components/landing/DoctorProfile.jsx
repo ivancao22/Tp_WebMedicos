@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import doctorPicture from '../assets/landing/drMartinez.png'; // Ajusta la ruta si es necesario
-import { useAuth } from "../auth/AuthContext";
+import doctorPicture from '../../assets/landing/drMartinez.png'; 
+import { useAuth } from "../../auth/AuthContext";
 
 export default function DoctorProfile() {
   const { user } = useAuth();
@@ -16,16 +16,24 @@ export default function DoctorProfile() {
             Médico Estético · MN 123456
           </h2>
           <p className="mt-4 text-gray-700 leading-relaxed">
-  Soy especialista en medicina estética con más de 15 años de experiencia en
-  tratamientos faciales y corporales mínimamente invasivos, ayudando a mis
-  pacientes a mejorar su salud, confianza y bienestar con resultados naturales
-  y seguros.
+Soy médico estético con más de 15 años de experiencia en tratamientos
+        faciales y corporales. Mi objetivo es que cada paciente se sienta
+        acompañado y seguro, logrando resultados naturales que mejoren su
+        bienestar y confianza.
 </p>
 
 <p className="mt-4 text-gray-700 leading-relaxed">
-  En mi consultorio en Polo Dot, CABA, un espacio moderno con tecnología de
-  vanguardia, trabajamos junto a un equipo de tres especialistas para brindar
-  una atención integral, personalizada y de excelencia.
+  Atiendo en mi estudio medico en Polo Dot, CABA, un espacio moderno donde
+        trabajamos junto a un equipo médico de confianza para ofrecer una
+        atención integral, cercana y personalizada.
+</p>
+
+<p className="mt-4 text-gray-700 leading-relaxed font-medium">
+  Si querés conocerme más o saber más sobre mi experiencia y mi equipo, 
+  podés visitar la sección{" "}
+  <Link to="/about-us" className="text-blue-700 hover:text-blue-600 transition">
+    Sobre Nosotros
+  </Link>.
 </p>
 
 {/* Formación académica */}

@@ -37,8 +37,8 @@ export default function Footer() {
 
         {/* Legales */}
         <div className="flex flex-col gap-2 text-sm mt-4 md:mt-0">
-          <Link to="/terminos" className="hover:text-blue-700">Términos y Condiciones</Link>
-          <Link to="/privacidad" className="hover:text-blue-700">Política de Privacidad</Link>
+          <Link to="/terminos-condiciones" className="hover:text-blue-700">Términos y Condiciones</Link>
+          <Link to="/politicas-privacidad" className="hover:text-blue-700">Política de Privacidad</Link>
         </div>
       </div>
 

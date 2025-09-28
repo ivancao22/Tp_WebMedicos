@@ -1,7 +1,7 @@
 const testimonios = [
   {
     nombre: "María G.",
-    texto: "La Dra. Julieta me ayudó a sentirme más segura y feliz con mi imagen. Excelente atención y resultados.",
+    texto: "El Dr. Martinez me ayudó a sentirme más segura y feliz con mi imagen. Excelente atención y resultados.",
     foto: "https://randomuser.me/api/portraits/women/40.jpg",
   },
   {
@@ -19,6 +19,16 @@ const testimonios = [
     texto: "La mejor médica estética, súper cálida y detallista. Volveré sin dudas.",
     foto: "https://randomuser.me/api/portraits/women/72.jpg",
   },
+  {
+    nombre: "Maria S.",
+    texto: "Siempre la mejor atencion, fijandose en el detalle y siendo sinceros con las recomendaciones.",
+    foto: "https://randomuser.me/api/portraits/women/70.jpg",
+  },
+  {
+    nombre: "Julia G.",
+    texto: "Volveria, me senti muy comoda tanto en la consulta como durante el tratamiento. Muy profesional todo.",
+    foto: "https://randomuser.me/api/portraits/women/78.jpg",
+  }
 ];
 
 export default testimonios;
