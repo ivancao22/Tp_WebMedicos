@@ -76,7 +76,7 @@ export default function GestionCitas() {
       display: "flex",
       alignItems: "flex-start",
       justifyContent: "center",
-      background: "#f7fbff"
+      background: "#eff6ff"
     }}>
       {/* Popup de alertas, aparece cuando se confirma/cancela una cita */}
       <PopUpAlertas

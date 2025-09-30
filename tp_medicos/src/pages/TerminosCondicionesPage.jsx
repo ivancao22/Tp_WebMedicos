@@ -10,7 +10,7 @@ export default function TerminosCondiciones() {
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
-        background: "#f7fbff",
+        background: "#eff6ff",
         py: 6,
       }}
     >

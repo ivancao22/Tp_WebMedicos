@@ -67,11 +67,13 @@ export default function Login() {
   return (
     <div
       style={{
-        minHeight: "60vh",
+        minHeight: "100vh",
+        background: "#eff6ff",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 16,
+        paddingBottom : 100,
       }}
     >
       <form

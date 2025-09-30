@@ -98,14 +98,14 @@ export default function ObraSocialPublic() {
         >
           <div style={{ marginBottom: 8 }}>
             Contáctanos por correo a{" "}
-            <a href="mailto:drMartinez@gmail.com" style={{ color: "#2457A7", fontWeight: "bold" }}>
-              drMartinez@gmail.com
+            <a href="mailto:drmartinez@gmail.com" style={{ color: "#2457A7", fontWeight: "bold" }}>
+              drmartinez@gmail.com
             </a>
           </div>
           <div style={{ marginBottom: 2 }}>
             O por WhatsApp/llamada al{" "}
-            <a href="tel:+541132321212" style={{ color: "#2457A7", fontWeight: "bold" }}>
-              11-3232-1212
+            <a href="tel:+5491198128764" style={{ color: "#2457A7", fontWeight: "bold" }}>
+              11-9812-8764
             </a>
           </div>
           <div style={{ fontSize: "0.97rem", marginTop: 5 }}>
