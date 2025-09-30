@@ -153,7 +153,6 @@ export default function SolicitarCita() {
       display: "flex",
       alignItems: "flex-start",
       justifyContent: "center",
-      background: "#f7fbff"
     }}>
       <Paper elevation={8} sx={{
         width: { xs: "100vw", md: 1100 },
