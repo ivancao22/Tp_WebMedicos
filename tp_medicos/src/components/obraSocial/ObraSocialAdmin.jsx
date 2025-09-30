@@ -1,72 +1,64 @@
 import React, { useEffect, useState } from "react";
 import iniciales from "../../mock/ObraSocial";
 
-const LS_KEY = "obrasSociales_v1";
+const STORAGE_KEY = "obrasSociales_v1";
 
-// Helpers de (de)serialización seguros
-function cargarDesdeLS() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function guardarEnLS(data) {
-  localStorage.setItem(LS_KEY, JSON.stringify(data));
-}
-
+// Panel de administración de obras sociales con persistencia en localStorage
 export default function ObraSocialAdmin() {
-  // 1) Estado inicial: primero intento localStorage, si no hay uso "iniciales"
+  // 1) Cargar inicial desde localStorage (si existe) o desde el mock
   const [obras, setObras] = useState(() => {
-    const guardadas = cargarDesdeLS();
-    return Array.isArray(guardadas) ? guardadas : iniciales;
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(data) && data.length ? data : iniciales;
+    } catch {
+      return iniciales;
+    }
   });
-
-  // 2) Persisto en localStorage ante cualquier cambio de "obras"
-  useEffect(() => {
-    guardarEnLS(obras);
-  }, [obras]);
 
   const [nuevo, setNuevo] = useState("");
   const [editId, setEditId] = useState(null);
   const [editNombre, setEditNombre] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  // Agregar
+  // 2) Guardar automáticamente en localStorage cuando cambie "obras"
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obras));
+  }, [obras]);
+
+  // helpers
+  const mostrarMensaje = (msg) => {
+    setMensaje(msg);
+    setTimeout(() => setMensaje(""), 1800);
+  };
+
+  // acciones
   const agregar = () => {
-    if (!nuevo.trim()) return;
-    setObras([...obras, { id: Date.now(), nombre: nuevo.trim() }]);
+    const nombre = nuevo.trim();
+    if (!nombre) return;
+    setObras((prev) => [...prev, { id: Date.now(), nombre }]);
     setNuevo("");
     mostrarMensaje("Obra social agregada");
   };
 
-  // Eliminar
   const eliminar = (id) => {
-    setObras(obras.filter((o) => o.id !== id));
+    setObras((prev) => prev.filter((o) => o.id !== id));
     mostrarMensaje("Obra social eliminada");
   };
 
-  // Modo edición
   const empezarEditar = (id, nombre) => {
     setEditId(id);
     setEditNombre(nombre);
   };
 
-  // Guardar edición
   const guardarEdicion = () => {
     const nombre = editNombre.trim();
     if (!nombre) return;
-    setObras((prev) => prev.map((o) => (o.id === editId ? { ...o, nombre } : o)));
+    setObras((prev) =>
+      prev.map((o) => (o.id === editId ? { ...o, nombre } : o))
+    );
     setEditId(null);
     setEditNombre("");
     mostrarMensaje("Obra social actualizada");
-  };
-
-  const mostrarMensaje = (msg) => {
-    setMensaje(msg);
-    setTimeout(() => setMensaje(""), 1800);
   };
 
   return (
@@ -93,7 +85,6 @@ export default function ObraSocialAdmin() {
         Administración de Obras Sociales
       </h2>
 
-      {/* Alta */}
       <div style={{ display: "flex", gap: 8, marginBottom: 24, justifyContent: "center" }}>
         <input
           value={nuevo}
@@ -127,7 +118,6 @@ export default function ObraSocialAdmin() {
         </button>
       </div>
 
-      {/* Lista */}
       <div
         style={{
           background: "white",
@@ -161,6 +151,7 @@ export default function ObraSocialAdmin() {
                       borderRadius: 5,
                       padding: "6px 10px",
                       fontSize: "1rem",
+                      flex: 1,
                     }}
                   />
                   <button
