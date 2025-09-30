@@ -1,10 +1,38 @@
-import React from "react";
-import obrasEjemplo from '../../mock/ObraSocial';
+import React, { useEffect, useState } from "react";
+import mockObras from '../../mock/ObraSocial';
+
+const STORAGE_KEY = "obrasSociales_v1";
 
 // Esta página muestra la lista de obras sociales con las que trabaja el consultorio.
 // Es solo informativa, para que los pacientes puedan consultar si su cobertura está incluida.
 // Si no la encuentran, les damos los datos de contacto para que puedan consultar.
 export default function ObraSocialPublic() {
+  // Estado: inicializa desde localStorage, o fallback al mock
+  const [obras, setObras] = useState(() => {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(data) && data.length ? data : mockObras;
+    } catch {
+      return mockObras;
+    }
+  });
+
+  // Si otra pestaña o acción cambia localStorage, escuchamos y actualizamos
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === STORAGE_KEY) {
+        try {
+          const data = JSON.parse(e.newValue);
+          setObras(Array.isArray(data) && data.length ? data : mockObras);
+        } catch {
+          setObras(mockObras);
+        }
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   return (
     <div
       style={{
@@ -30,6 +58,7 @@ export default function ObraSocialPublic() {
       >
         Trabajamos con las siguientes obras sociales
       </h2>
+
       {/* Grid de obras sociales, cada una en su tarjetita */}
       <div
         style={{
@@ -40,7 +69,7 @@ export default function ObraSocialPublic() {
           marginBottom: 20,
         }}
       >
-        {obrasEjemplo.map((obra) => (
+        {obras.map((obra) => (
           <div
             key={obra.id}
             style={{
