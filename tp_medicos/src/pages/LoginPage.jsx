@@ -219,19 +219,7 @@ export default function Login() {
             />
             Recordarme
           </label>
-          <button
-            type="button"
-            onClick={() => alert("Recupero de contraseña: a implementar")}
-            style={{
-              border: "none",
-              background: "transparent",
-              color: "#2563eb",
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
+          
         </div>
 
         {/* Botón para enviar el form */}
