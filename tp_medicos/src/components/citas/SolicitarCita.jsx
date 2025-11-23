@@ -188,7 +188,6 @@ export default function SolicitarCita() {
               value={form.nombre}
               onChange={handleChange}
               error={!!errores.nombre}
-              helperText={errores.nombre || "Ingrese su nombre"}
               fullWidth
               variant="outlined"
             />
@@ -200,7 +199,6 @@ export default function SolicitarCita() {
               value={form.apellido}
               onChange={handleChange}
               error={!!errores.apellido}
-              helperText={errores.apellido || "Ingrese su apellido"}
               fullWidth
               variant="outlined"
             />
@@ -212,7 +210,6 @@ export default function SolicitarCita() {
               value={form.telefono}
               onChange={handleChange}
               error={!!errores.telefono}
-              helperText={errores.telefono || "Ingrese su teléfono"}
               fullWidth
               variant="outlined"
             />
@@ -224,7 +221,6 @@ export default function SolicitarCita() {
               value={form.email}
               onChange={handleChange}
               error={!!errores.email}
-              helperText={errores.email || "Ingrese su correo electrónico"}
               fullWidth
               variant="outlined"
             />
@@ -233,7 +229,7 @@ export default function SolicitarCita() {
 
         {/* Segunda fila: Obra Social, Motivo, Médico */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4} sx={{ minWidth: 200 }}>
             <TextField
               select
               label="Obra Social"
@@ -241,7 +237,6 @@ export default function SolicitarCita() {
               value={form.obraSocial}
               onChange={handleChange}
               error={!!errores.obraSocial}
-              helperText={errores.obraSocial || "Seleccione su obra social"}
               fullWidth
               variant="outlined"
             >
@@ -251,7 +246,7 @@ export default function SolicitarCita() {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4} sx={{ minWidth: 200 }}>
             <TextField
               select
               label="Motivo"
@@ -259,7 +254,6 @@ export default function SolicitarCita() {
               value={form.motivo}
               onChange={handleChange}
               error={!!errores.motivo}
-              helperText={errores.motivo || "Seleccione el motivo de la consulta"}
               fullWidth
               variant="outlined"
             >
@@ -269,7 +263,7 @@ export default function SolicitarCita() {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4} sx={{ minWidth: 200 }}>
             <TextField
               select
               label="Médico"
@@ -277,9 +271,8 @@ export default function SolicitarCita() {
               value={form.medico}
               onChange={handleChange}
               error={!!errores.medico}
-              helperText={errores.medico || "Seleccione el médico"}
               fullWidth
-              variant="outlined"
+              variant="outlined"         
             >
               {/* Los médicos en licencia aparecen deshabilitados */}
               {medicos.map(medico => (
