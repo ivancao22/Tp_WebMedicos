@@ -18,7 +18,7 @@ export default function Login() {
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [error, setError] = useState("");
 
-  // Validación de usuario (solo muestra error si se tocó el input)
+  // Validación de usuario
   const userError = useMemo(() => {
     if (!touched.u) return "";
     if (!username) return "Ingresá el usuario o email.";
@@ -26,7 +26,7 @@ export default function Login() {
     return "";
   }, [username, touched.u]);
 
-  // Validación de contraseña (mínimo 8, letras y números)
+  // Validación de contraseña
   const passError = useMemo(() => {
     if (!touched.p) return "";
     if (!password) return "Ingresá la contraseña.";
@@ -36,10 +36,8 @@ export default function Login() {
     return "";
   }, [password, touched.p]);
 
-  // El form es válido si no hay errores y los dos campos están completos
   const formValid = username && password && !userError && !passError;
 
-  // Cuando el usuario envía el form
   async function handleSubmit(e) {
     e.preventDefault();
     setTouched({ u: true, p: true });
@@ -73,7 +71,7 @@ export default function Login() {
         alignItems: "center",
         justifyContent: "center",
         padding: 16,
-        paddingBottom : 100,
+        paddingBottom: 100,
       }}
     >
       <form
@@ -90,7 +88,6 @@ export default function Login() {
       >
         <h2 style={{ textAlign: "center", marginBottom: 16 }}>Iniciar sesión</h2>
 
-        {/* Muestra error si las credenciales están mal */}
         {error && (
           <div
             role="alert"
@@ -109,7 +106,6 @@ export default function Login() {
           </div>
         )}
 
-        {/* Campo usuario */}
         <div style={{ marginBottom: 12 }}>
           <label htmlFor="login-user" style={{ fontSize: 14 }}>
             Usuario o email
@@ -122,7 +118,7 @@ export default function Login() {
               setUsername(e.target.value);
               if (error) setError("");
             }}
-            onBlur={() => setTouched((t) => ({ ...t, u: true }))}
+            onBlur={() => setTouched((t) => ({ ...t, u: true }))} 
             placeholder="usuario o email"
             autoComplete="username"
             disabled={status === "loading"}
@@ -135,7 +131,6 @@ export default function Login() {
               outline: "none",
             }}
           />
-          {/* Error de usuario */}
           {userError && (
             <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 4 }}>
               {userError}
@@ -143,7 +138,6 @@ export default function Login() {
           )}
         </div>
 
-        {/* Campo contraseña */}
         <div style={{ marginBottom: 12 }}>
           <label htmlFor="login-pass" style={{ fontSize: 14 }}>
             Contraseña
@@ -157,7 +151,7 @@ export default function Login() {
                 setPassword(e.target.value);
                 if (error) setError("");
               }}
-              onBlur={() => setTouched((t) => ({ ...t, p: true }))}
+              onBlur={() => setTouched((t) => ({ ...t, p: true }))} 
               placeholder="••••••••"
               autoComplete="current-password"
               disabled={status === "loading"}
@@ -170,7 +164,6 @@ export default function Login() {
                 outline: "none",
               }}
             />
-            {/* Botón para mostrar/ocultar la contraseña */}
             <button
               type="button"
               onClick={() => setShowPass((s) => !s)}
@@ -190,7 +183,6 @@ export default function Login() {
               {showPass ? "Ocultar" : "Mostrar"}
             </button>
           </div>
-          {/* Error de contraseña */}
           {passError && (
             <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 4 }}>
               {passError}
@@ -201,7 +193,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Checkbox Recordarme y link Olvidaste tu contraseña */}
         <div
           style={{
             display: "flex",
@@ -219,10 +210,8 @@ export default function Login() {
             />
             Recordarme
           </label>
-          
         </div>
 
-        {/* Botón para enviar el form */}
         <button
           type="submit"
           disabled={!formValid || status === "loading"}

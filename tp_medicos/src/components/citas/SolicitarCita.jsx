@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import obrasSociales from "../../mock/ObraSocial";
+import obrasSocialesMock from "../../mock/ObraSocial";
 import medicos from "../../mock/Medicos";
 import motivosCita from "../../mock/MotivosCita";
 import {
@@ -8,6 +8,9 @@ import {
 import { DateCalendar, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from "dayjs";
+
+// 🔴 NUEVO: importo funciones que hablan con el back
+import { getObrasSociales, crearCita } from "../../services/api";
 
 // Clave para guardar citas en localStorage, simulando una base de datos local
 const LOCAL_KEY = "citas_mock_storage";
@@ -29,7 +32,10 @@ const generarHorarios = () => {
 };
 
 export default function SolicitarCita() {
-  // Lee las citas guardadas para evitar solapamiento de horarios
+  // 🔴 NUEVO: obras sociales que vienen del backend (o mock si falla)
+  const [obrasSociales, setObrasSociales] = useState([]);
+
+  // Lee las citas guardadas para evitar solapamiento de horarios (en este navegador)
   const [citas, setCitas] = useState(() => {
     const persisted = localStorage.getItem(LOCAL_KEY);
     try {
@@ -49,13 +55,32 @@ export default function SolicitarCita() {
     apellido: '',
     telefono: '',
     email: '',
-    obraSocial: '',
+    obraSocial: '',      // acá vamos a guardar el ID de la obra social
     motivo: '',
     fecha: null,
     hora: '',
     medico: ''
   });
   const [errores, setErrores] = useState({});
+
+  // 🔴 NUEVO: cargar obras sociales desde el backend (con fallback al mock)
+  useEffect(() => {
+    const cargarObras = async () => {
+      try {
+        const data = await getObrasSociales();      // viene del back
+        setObrasSociales(data);                    // se espera [{ _id, nombre, ... }]
+      } catch (err) {
+        console.error("Error obteniendo obras sociales del back, usando mock:", err.message);
+        // fallback al mock
+        const adaptadas = obrasSocialesMock.map(os => ({
+          _id: os.id,
+          nombre: os.nombre
+        }));
+        setObrasSociales(adaptadas);
+      }
+    };
+    cargarObras();
+  }, []);
 
   // Muestra el mensaje de éxito por 10 segundos
   useEffect(() => {
@@ -85,7 +110,7 @@ export default function SolicitarCita() {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  // Filtra los horarios ocupados para cada médico y fecha
+  // Filtra los horarios ocupados para cada médico y fecha (en este navegador)
   const horariosLibres = () => {
     if (!form.fecha || !form.medico) return [];
     const fechaStr = form.fecha.format("YYYY-MM-DD");
@@ -106,26 +131,49 @@ export default function SolicitarCita() {
     setForm({ ...form, hora });
   };
 
-  // Cuando el usuario reserva, guarda la cita y muestra mensaje
-  const handleReservar = (e) => {
+  // 🔴 MODIFICADO: ahora también manda la cita al backend
+  const handleReservar = async (e) => {
     e.preventDefault();
     if (!validar()) return;
+
+    const fechaFormateada = form.fecha.format("YYYY-MM-DD");
     const nuevaCita = {
       id: Date.now(),
       nombre: form.nombre,
       apellido: form.apellido,
       telefono: form.telefono,
       email: form.email,
-      obraSocial: form.obraSocial,
+      obraSocial: form.obraSocial,   // acá está el ID
       motivo: form.motivo,
-      fecha: form.fecha.format("YYYY-MM-DD"),
+      fecha: fechaFormateada,
       horario: form.hora,
       medico: form.medico,
       estado: "Solicitada"
     };
+
+    // Guarda local (como ya tenías)
     const nuevasCitas = [...citas, nuevaCita];
     setCitas(nuevasCitas);
     localStorage.setItem(LOCAL_KEY, JSON.stringify(nuevasCitas));
+
+    // 🔴 NUEVO: enviar al backend
+    try {
+      const fechaISO = dayjs(`${fechaFormateada}T${form.hora}`).toISOString();
+      await crearCita({
+        nombreResponsable: `${form.nombre} ${form.apellido}`.trim(),
+        nombrePaciente: `${form.nombre} ${form.apellido}`.trim(),
+        telefono: form.telefono,
+        email: form.email,
+        obraSocialId: form.obraSocial,  // ID de la obra social
+        motivo: form.motivo,
+        medico: form.medico,
+        fecha: fechaISO
+      });
+    } catch (err) {
+      console.error("Error enviando la cita al backend:", err.message);
+      // no corto el flujo, igual queda guardada en local; si querés podés mostrar un error aparte
+    }
+
     setMensaje("Cita agendada con éxito. Revise su correo electrónico para los datos de la cita.");
     setForm({
       nombre: '',
@@ -242,7 +290,7 @@ export default function SolicitarCita() {
             >
               {/* Muestra todas las obras sociales disponibles */}
               {obrasSociales.map((os) => (
-                <MenuItem key={os.id} value={os.nombre}>{os.nombre}</MenuItem>
+                <MenuItem key={os._id} value={os._id}>{os.nombre}</MenuItem>
               ))}
             </TextField>
           </Grid>
@@ -272,7 +320,7 @@ export default function SolicitarCita() {
               onChange={handleChange}
               error={!!errores.medico}
               fullWidth
-              variant="outlined"         
+              variant="outlined"
             >
               {/* Los médicos en licencia aparecen deshabilitados */}
               {medicos.map(medico => (

@@ -1,44 +1,111 @@
 import React, { useState, useEffect } from "react";
 import iniciales from '../../mock/ObraSocial';
 
+import {
+  getObrasSociales,
+  crearObraSocial,
+  actualizarObraSocial,
+  eliminarObraSocial
+} from "../../services/api";
+
 const STORAGE_KEY = "obrasSociales_v1";
 
 // Esta página es el panel de administración de obras sociales.
-// Permite agregar, editar y eliminar obras sociales de forma muy simple.
-// Los cambios se guardan en localStorage, de modo que persisten al refrescar la página.
+// Permite agregar, editar y eliminar obras sociales.
+// Ahora intenta usar el backend, pero mantiene localStorage + mock como backup.
 export default function ObraSocialAdmin() {
-  // Estado inicial: lee de localStorage o usa el mock
-  const [obras, setObras] = useState(() => {
-    try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      return Array.isArray(data) && data.length ? data : iniciales;
-    } catch {
-      return iniciales;
-    }
-  });
-
+  const [obras, setObras] = useState([]);
   const [nuevo, setNuevo] = useState(""); // Nombre nuevo para agregar
-  const [editId, setEditId] = useState(null); // ID de la obra que se está editando
+  const [editId, setEditId] = useState(null); // ID de la obra en edición
   const [editNombre, setEditNombre] = useState(""); // Nombre editado
   const [mensaje, setMensaje] = useState(""); // Mensaje de confirmación
 
-  // Cada vez que cambie "obras", lo guardamos en localStorage
+  // Cargar obras sociales al montar el componente
+  useEffect(() => {
+    const cargarObras = async () => {
+      try {
+        // 1) intento traer del backend
+        const data = await getObrasSociales(); // se espera [{ _id, nombre, ... }]
+        const normalizadas = data.map(o => ({
+          id: o._id,
+          nombre: o.nombre
+        }));
+        setObras(normalizadas);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizadas));
+      } catch (err) {
+        console.error("Error obteniendo obras sociales del backend, uso localStorage/mock:", err);
+
+        // 2) si falla el back, uso localStorage o mock inicial
+        try {
+          const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (Array.isArray(data) && data.length) {
+            setObras(data);
+          } else {
+            setObras(iniciales);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(iniciales));
+          }
+        } catch {
+          setObras(iniciales);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(iniciales));
+        }
+      }
+    };
+
+    cargarObras();
+  }, []);
+
+  // Cada vez que cambie "obras", lo guardamos en localStorage (por las dudas)
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(obras));
   }, [obras]);
 
+  // Muestra un mensaje temporal en pantalla
+  const mostrarMensaje = (msg) => {
+    setMensaje(msg);
+    setTimeout(() => setMensaje(""), 1800);
+  };
+
   // Agrega una obra social nueva
-  const agregar = () => {
+  const agregar = async () => {
     if (!nuevo.trim()) return;
-    setObras([...obras, { id: Date.now(), nombre: nuevo }]);
-    setNuevo("");
-    mostrarMensaje("Obra social agregada");
+
+    // Primero actualizamos en el backend
+    try {
+      const creada = await crearObraSocial({
+        nombre: nuevo.trim(),
+        descripcion: ""
+      });
+
+      // creada debería tener _id y nombre
+      const nuevaObra = {
+        id: creada._id,
+        nombre: creada.nombre
+      };
+
+      setObras(prev => [...prev, nuevaObra]);
+      setNuevo("");
+      mostrarMensaje("Obra social agregada");
+    } catch (err) {
+      console.error("Error creando obra social en el backend:", err);
+
+      // fallback: la agregamos solo local si el back falla
+      const nuevaObra = { id: Date.now(), nombre: nuevo.trim() };
+      setObras(prev => [...prev, nuevaObra]);
+      setNuevo("");
+      mostrarMensaje("Obra social agregada (solo local)");
+    }
   };
 
   // Elimina una obra social por ID
-  const eliminar = (id) => {
-    setObras(obras.filter(o => o.id !== id));
+  const eliminar = async (id) => {
+    setObras(prev => prev.filter(o => o.id !== id));
     mostrarMensaje("Obra social eliminada");
+
+    try {
+      await eliminarObraSocial(id);
+    } catch (err) {
+      console.error("Error eliminando obra social en el backend:", err);
+    }
   };
 
   // Prepara el modo edición para una obra social existente
@@ -48,17 +115,25 @@ export default function ObraSocialAdmin() {
   };
 
   // Guarda los cambios de edición
-  const guardarEdicion = () => {
-    setObras(obras.map(o => o.id === editId ? { ...o, nombre: editNombre } : o));
+  const guardarEdicion = async () => {
+    const nuevoNombre = editNombre.trim();
+    if (!nuevoNombre) return;
+
+    setObras(prev =>
+      prev.map(o => o.id === editId ? { ...o, nombre: nuevoNombre } : o)
+    );
+    mostrarMensaje("Obra social actualizada");
+
+    try {
+      await actualizarObraSocial(editId, {
+        nombre: nuevoNombre
+      });
+    } catch (err) {
+      console.error("Error actualizando obra social en el backend:", err);
+    }
+
     setEditId(null);
     setEditNombre("");
-    mostrarMensaje("Obra social actualizada");
-  };
-
-  // Muestra un mensaje temporal en pantalla
-  const mostrarMensaje = (msg) => {
-    setMensaje(msg);
-    setTimeout(() => setMensaje(""), 1800); // El mensaje desaparece después de 1.8 segundos
   };
 
   return (
@@ -142,7 +217,6 @@ export default function ObraSocialAdmin() {
                 borderBottom: "1px solid #f2f2f2"
               }}
             >
-              {/* Si se está editando, muestra input y botones de guardar/cancelar */}
               {editId === obra.id ? (
                 <>
                   <input
@@ -186,9 +260,7 @@ export default function ObraSocialAdmin() {
                 </>
               ) : (
                 <>
-                  {/* Nombre de la obra social */}
                   <span style={{ flex: 1, fontWeight: 500, color: "#1e293b" }}>{obra.nombre}</span>
-                  {/* Botón para editar */}
                   <button
                     style={{
                       background: "#f0f6ff",
@@ -203,7 +275,6 @@ export default function ObraSocialAdmin() {
                   >
                     Editar
                   </button>
-                  {/* Botón para eliminar */}
                   <button
                     style={{
                       background: "#ffe1e1",
@@ -223,14 +294,14 @@ export default function ObraSocialAdmin() {
             </li>
           )}
         </ul>
-        {/* Mensaje si no hay obras sociales cargadas */}
         {obras.length === 0 && (
           <div style={{ textAlign: "center", color: "#999" }}>
             No hay obras sociales cargadas.
           </div>
         )}
       </div>
-      {/* Mensaje de confirmación de acción (agregado, editado, eliminado) */}
+
+      {/* Mensaje de confirmación de acción */}
       {mensaje && (
         <div
           style={{
@@ -247,3 +318,4 @@ export default function ObraSocialAdmin() {
     </div>
   );
 }
+
