@@ -1,7 +1,7 @@
 # TP Web Médico
 
 ¡Hola!  
-Este es el proyecto de front end del TP para el sitio web de gestión médica. La idea principal es crear una plataforma para que un médico (o su secretaria) pueda administrar su agenda de turnos, mostrar información profesional y gestionar las reservas de citas de manera fácil y rápida.  
+Este es el proyecto de front end y back end del TP para el sitio web de gestión médica. La idea principal es crear una plataforma para que un médico (o su secretaria) pueda administrar su agenda de turnos, mostrar información profesional y gestionar las reservas de citas de manera fácil y rápida.  
 Abajo te cuento cómo funciona cada parte y qué tecnologías usé para lograrlo.
 
 ---
