@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db/pool');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { obraValidator } = require('../middleware/validators');
 
 // GET /obras  -> listar obras sociales
 router.get('/', async (req, res) => {
@@ -15,9 +16,8 @@ router.get('/', async (req, res) => {
 });
 
 // POST /obras  -> crear (protegido)
-router.post('/', requireAuth, requireRole('admin','secretaria'), async (req, res) => {
+router.post('/', requireAuth, requireRole('admin','secretaria'), obraValidator, async (req, res) => {
   const { nombre } = req.body;
-  if (!nombre) return res.status(400).json({ error: 'nombre es requerido' });
   try {
     const { rows } = await pool.query(
       'INSERT INTO obras_sociales (nombre) VALUES ($1) RETURNING *',
@@ -32,10 +32,9 @@ router.post('/', requireAuth, requireRole('admin','secretaria'), async (req, res
 });
 
 // PATCH /obras/:id  -> actualizar nombre (protegido)
-router.patch('/:id', requireAuth, requireRole('admin','secretaria'), async (req, res) => {
+router.patch('/:id', requireAuth, requireRole('admin','secretaria'), obraValidator, async (req, res) => {
   const { id } = req.params;
   const { nombre } = req.body;
-  if (!nombre) return res.status(400).json({ error: 'nombre es requerido' });
   try {
     const { rows } = await pool.query(
       'UPDATE obras_sociales SET nombre = $1 WHERE id = $2 RETURNING *',

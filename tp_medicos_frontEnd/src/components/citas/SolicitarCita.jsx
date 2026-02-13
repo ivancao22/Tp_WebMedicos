@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import obrasSociales from "../../mock/ObraSocial";
-import medicos from "../../mock/Medicos";
-import motivosCita from "../../mock/MotivosCita";
+import { crearTurno, guardarTurnoLocal, getTurnos } from "../../services/turnosService";
+import { getMedicos } from "../../services/medicosServices";
+import { getObras } from "../../services/obrasServices";
+import motivosCita from "../../mock/MotivosCita"; // opcional: migrar luego a API
 import {
-  TextField, Button, MenuItem, Box, Typography, Paper, Grid, Tooltip
+  TextField, Button, MenuItem, Box, Typography, Paper, Grid, Tooltip, CircularProgress
 } from '@mui/material';
 import { DateCalendar, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from "dayjs";
 
-// Clave para guardar citas en localStorage, simulando una base de datos local
+// Clave para guardar citas en localStorage (fallback)
 const LOCAL_KEY = "citas_mock_storage";
 
 // Genera los horarios posibles cada 45 minutos, de 9:00 a 18:00
@@ -29,8 +30,8 @@ const generarHorarios = () => {
 };
 
 export default function SolicitarCita() {
-  // Lee las citas guardadas para evitar solapamiento de horarios
-  const [citas, setCitas] = useState(() => {
+  // Fallback local: citas guardadas en localStorage
+  const [citasLocal, setCitasLocal] = useState(() => {
     const persisted = localStorage.getItem(LOCAL_KEY);
     try {
       return persisted ? JSON.parse(persisted) : [];
@@ -39,11 +40,21 @@ export default function SolicitarCita() {
     }
   });
 
-  // Mensaje de éxito cuando se agenda una cita
+  // Listas desde API
+  const [medicosList, setMedicosList] = useState([]);
+  const [obrasList, setObrasList] = useState([]);
+  const [loadingMeta, setLoadingMeta] = useState(true);
+
+  // Turnos traídos del servidor para el médico/fecha seleccionados
+  const [serverTurnos, setServerTurnos] = useState([]);
+  const [loadingTurnos, setLoadingTurnos] = useState(false);
+
+  // Mensajes y flags
   const [mensaje, setMensaje] = useState('');
   const [showMensaje, setShowMensaje] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Estado del formulario, guarda todos los datos del paciente
+  // Form
   const [form, setForm] = useState({
     nombre: '',
     apellido: '',
@@ -57,19 +68,72 @@ export default function SolicitarCita() {
   });
   const [errores, setErrores] = useState({});
 
-  // Muestra el mensaje de éxito por 10 segundos
+  // Mostrar mensaje por 10s
   useEffect(() => {
     if (mensaje) {
       setShowMensaje(true);
       const timer = setTimeout(() => {
         setShowMensaje(false);
         setMensaje('');
-      }, 10000); // 10 segundos
+      }, 10000);
       return () => clearTimeout(timer);
     }
   }, [mensaje]);
 
-  // Validaciones del formulario, chequea que todo esté bien antes de agendar
+  // Cargar médicos y obras sociales al montar
+  useEffect(() => {
+    let mounted = true;
+    async function loadMeta() {
+      setLoadingMeta(true);
+      try {
+        const [meds, obras] = await Promise.all([
+          getMedicos().catch(() => []),
+          getObras().catch(() => []),
+        ]);
+        if (!mounted) return;
+        setMedicosList(meds || []);
+        setObrasList(obras || []);
+      } catch (err) {
+        console.error('Error cargando médicos/obras:', err);
+        setMedicosList([]);
+        setObrasList([]);
+      } finally {
+        if (mounted) setLoadingMeta(false);
+      }
+    }
+    loadMeta();
+    return () => { mounted = false; };
+  }, []);
+
+  // Cuando cambia médico o fecha, traer turnos del servidor para esa fecha
+  useEffect(() => {
+    let mounted = true;
+    async function fetchTurnos() {
+      if (!form.medico || !form.fecha) {
+        setServerTurnos([]);
+        return;
+      }
+      setLoadingTurnos(true);
+      try {
+        const fechaStr = form.fecha.format("YYYY-MM-DD");
+        const desde = `${fechaStr}T00:00:00Z`;
+        const hasta = `${fechaStr}T23:59:59Z`;
+        const params = { medico_id: form.medico, desde, hasta };
+        const arr = await getTurnos(params);
+        if (!mounted) return;
+        setServerTurnos(arr || []);
+      } catch (err) {
+        console.error('Error obteniendo turnos del servidor:', err);
+        setServerTurnos([]);
+      } finally {
+        if (mounted) setLoadingTurnos(false);
+      }
+    }
+    fetchTurnos();
+    return () => { mounted = false; };
+  }, [form.medico, form.fecha]);
+
+  // Validaciones del formulario
   const validar = () => {
     const nuevosErrores = {};
     if (!form.nombre.trim() || !/^[a-zA-ZáéíóúÁÉÍÓÚ\s]+$/.test(form.nombre)) nuevosErrores.nombre = "El nombre es obligatorio y solo debe tener letras";
@@ -85,17 +149,27 @@ export default function SolicitarCita() {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  // Filtra los horarios ocupados para cada médico y fecha
+  // Calcula horarios libres basándose en serverTurnos (fallback a local)
   const horariosLibres = () => {
     if (!form.fecha || !form.medico) return [];
     const fechaStr = form.fecha.format("YYYY-MM-DD");
-    const ocupados = citas
-      .filter(c => c.fecha === fechaStr && c.medico === form.medico)
-      .map(c => c.horario);
+
+    const ocupadosFromServer = serverTurnos
+      .filter(t => {
+        const estado = (t.estado || '').toString().toLowerCase();
+        if (estado === 'cancelada' || estado === 'cancelado') return false;
+        return dayjs(t.fecha_turno).format("YYYY-MM-DD") === fechaStr;
+      })
+      .map(t => dayjs(t.fecha_turno).format("HH:mm"));
+
+    const ocupados = (serverTurnos && serverTurnos.length > 0)
+      ? ocupadosFromServer
+      : citasLocal.filter(c => c.fecha === fechaStr && c.medico === form.medico).map(c => c.horario);
+
     return generarHorarios().filter(hora => !ocupados.includes(hora));
   };
 
-  // Handlers de los campos del formulario
+  // Handlers
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -106,42 +180,79 @@ export default function SolicitarCita() {
     setForm({ ...form, hora });
   };
 
-  // Cuando el usuario reserva, guarda la cita y muestra mensaje
-  const handleReservar = (e) => {
+  // Reservar: llamar a la API, fallback local si falla
+  const handleReservar = async (e) => {
     e.preventDefault();
     if (!validar()) return;
-    const nuevaCita = {
-      id: Date.now(),
-      nombre: form.nombre,
-      apellido: form.apellido,
-      telefono: form.telefono,
-      email: form.email,
-      obraSocial: form.obraSocial,
-      motivo: form.motivo,
-      fecha: form.fecha.format("YYYY-MM-DD"),
-      horario: form.hora,
-      medico: form.medico,
-      estado: "Solicitada"
-    };
-    const nuevasCitas = [...citas, nuevaCita];
-    setCitas(nuevasCitas);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(nuevasCitas));
-    setMensaje("Cita agendada con éxito. Revise su correo electrónico para los datos de la cita.");
-    setForm({
-      nombre: '',
-      apellido: '',
-      telefono: '',
-      email: '',
-      obraSocial: '',
-      motivo: '',
-      fecha: null,
-      hora: '',
-      medico: ''
-    });
-    setErrores({});
+    setSubmitting(true);
+    try {
+      const payload = {
+        fecha: form.fecha.format("YYYY-MM-DD"),
+        hora: form.hora,
+        paciente_nombre: form.nombre,
+        paciente_apellido: form.apellido,
+        paciente_email: form.email,
+        paciente_telefono: form.telefono,
+        obra_social_id: form.obraSocial || null,
+        medico_id: form.medico,
+        motivo: form.motivo
+      };
+      const created = await crearTurno(payload);
+      // actualizar turnos en memoria para bloquear inmediatamente el horario reservado
+      setServerTurnos(prev => [...prev, created]);
+      setMensaje("Cita agendada con éxito. Revise su correo electrónico para los datos de la cita.");
+      // limpiar form
+      setForm({
+        nombre: '',
+        apellido: '',
+        telefono: '',
+        email: '',
+        obraSocial: '',
+        motivo: '',
+        fecha: null,
+        hora: '',
+        medico: ''
+      });
+      setErrores({});
+    } catch (err) {
+      console.error('Error creando turno (fallback local):', err);
+      try {
+        const local = guardarTurnoLocal({
+          paciente_nombre: form.nombre,
+          paciente_apellido: form.apellido,
+          paciente_email: form.email,
+          paciente_telefono: form.telefono,
+          obraSocial: form.obraSocial,
+          medico: form.medico,
+          fecha: form.fecha.format("YYYY-MM-DD"),
+          horario: form.hora,
+          motivo: form.motivo,
+          estado: 'Solicitada'
+        });
+        setCitasLocal(prev => [...prev, local]);
+        setMensaje("No se pudo contactar al servidor — la cita se guardó localmente.");
+        setForm({
+          nombre: '',
+          apellido: '',
+          telefono: '',
+          email: '',
+          obraSocial: '',
+          motivo: '',
+          fecha: null,
+          hora: '',
+          medico: ''
+        });
+        setErrores({});
+      } catch (err2) {
+        console.error('Error fallback local:', err2);
+        setMensaje('Error al guardar la cita. Intente nuevamente más tarde.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Solo permite seleccionar días hábiles (lunes a viernes)
+  // Only weekdays
   const disableWeekends = (date) => {
     const day = date.day();
     return day === 0 || day === 6;
@@ -164,7 +275,7 @@ export default function SolicitarCita() {
         <Typography variant="h5" align="center" sx={{ mb: 3, color: "#2563eb", fontWeight: 700 }}>
           Solicitar Cita Médica
         </Typography>
-        {/* Mensaje de éxito, aparece si la cita se agenda bien */}
+
         {showMensaje && (
           <Box sx={{
             color: "#18804b",
@@ -179,7 +290,6 @@ export default function SolicitarCita() {
           }}>{mensaje}</Box>
         )}
 
-        {/* Primera fila: nombre, apellido, telefono, correo */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} md={3}>
             <TextField
@@ -227,7 +337,6 @@ export default function SolicitarCita() {
           </Grid>
         </Grid>
 
-        {/* Segunda fila: Obra Social, Motivo, Médico */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} md={4} sx={{ minWidth: 200 }}>
             <TextField
@@ -240,10 +349,12 @@ export default function SolicitarCita() {
               fullWidth
               variant="outlined"
             >
-              {/* Muestra todas las obras sociales disponibles */}
-              {obrasSociales.map((os) => (
-                <MenuItem key={os.id} value={os.nombre}>{os.nombre}</MenuItem>
-              ))}
+              {loadingMeta ? <MenuItem><em>Cargando...</em></MenuItem> :
+                obrasList.length === 0 ? <MenuItem value=""><em>No hay obras</em></MenuItem> :
+                  obrasList.map(os => (
+                    <MenuItem key={os.id} value={os.id}>{os.nombre || os.razon_social || os.id}</MenuItem>
+                  ))
+              }
             </TextField>
           </Grid>
           <Grid item xs={12} md={4} sx={{ minWidth: 200 }}>
@@ -257,7 +368,6 @@ export default function SolicitarCita() {
               fullWidth
               variant="outlined"
             >
-              {/* Muestra todos los motivos de consulta disponibles */}
               {motivosCita.map((motivo, idx) => (
                 <MenuItem key={idx} value={motivo}>{motivo}</MenuItem>
               ))}
@@ -272,40 +382,41 @@ export default function SolicitarCita() {
               onChange={handleChange}
               error={!!errores.medico}
               fullWidth
-              variant="outlined"         
+              variant="outlined"
             >
-              {/* Los médicos en licencia aparecen deshabilitados */}
-              {medicos.map(medico => (
-                medico.estado === "licencia" ? (
-                  <Tooltip title="Médico en licencia" key={medico.id} arrow>
-                    <span>
-                      <MenuItem value={medico.nombre} disabled style={{ color: "#aaa" }}>
-                        {medico.nombre}
-                      </MenuItem>
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <MenuItem key={medico.id} value={medico.nombre}>{medico.nombre}</MenuItem>
-                )
-              ))}
+              {loadingMeta ? <MenuItem><em>Cargando...</em></MenuItem> :
+                medicosList.length === 0 ? <MenuItem value=""><em>No hay médicos</em></MenuItem> :
+                  medicosList.map(med => {
+                    const nombreCompleto = `${med.nombre || med.first_name || ''} ${med.apellido || med.lastName || ''}`.trim();
+                    return med.estado === "licencia" ? (
+                      <Tooltip title="Médico en licencia" key={med.id} arrow>
+                        <span>
+                          <MenuItem value={med.id} disabled style={{ color: "#aaa" }}>
+                            {nombreCompleto || med.nombre || med.id}
+                          </MenuItem>
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      <MenuItem key={med.id} value={med.id}>{nombreCompleto || med.nombre || med.id}</MenuItem>
+                    )
+                  })
+              }
             </TextField>
           </Grid>
         </Grid>
 
-        {/* Debajo: izquierda calendario, derecha horarios */}
         <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 4 }}>
           <Grid item xs={12} md={6}>
             <Typography sx={{ fontWeight: 600, color: "#2563eb", mb: 1, textAlign: "center" }}>
               Seleccione día
             </Typography>
-            {/* Calendario, solo habilita días hábiles y solo si se eligió médico */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DateCalendar
                 value={form.fecha}
                 onChange={handleFecha}
                 shouldDisableDate={disableWeekends}
                 minDate={dayjs()}
-                maxDate={dayjs().add(14, 'day')} // Solo dos semanas disponibles
+                maxDate={dayjs().add(14, 'day')}
                 disabled={!form.medico}
                 sx={{
                   width: "100%",
@@ -316,9 +427,10 @@ export default function SolicitarCita() {
                 views={['day']}
               />
             </LocalizationProvider>
+            {loadingTurnos && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}><CircularProgress size={20} /></Box>}
           </Grid>
+
           <Grid item xs={12} md={6}>
-            {/* Horarios disponibles para el día y médico elegido */}
             {form.fecha && (
               <>
                 <Typography sx={{ fontWeight: 600, color: "#2563eb", mb: 1, textAlign: "center" }}>
@@ -334,7 +446,6 @@ export default function SolicitarCita() {
                       width: "100%",
                       justifyContent: "center"
                     }}>
-                      {/* Botones de horarios, los ocupados aparecen deshabilitados */}
                       {generarHorarios().map(hora => {
                         const ocupado = !horariosLibres().includes(hora);
                         return (
@@ -362,7 +473,6 @@ export default function SolicitarCita() {
                       })}
                     </Box>
                   )}
-                {/* Mensaje de error si no eligió horario */}
                 <Typography color="error" fontSize={13} sx={{ minHeight: 20, textAlign: "center" }}>
                   {errores.hora || " "}
                 </Typography>
@@ -371,7 +481,6 @@ export default function SolicitarCita() {
           </Grid>
         </Grid>
 
-        {/* Botón para enviar la solicitud de cita, centrado */}
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
           <Button
             type="submit"
@@ -387,8 +496,9 @@ export default function SolicitarCita() {
               width: { xs: "100%", md: 300 }
             }}
             onClick={handleReservar}
+            disabled={submitting}
           >
-            SOLICITAR CITA
+            {submitting ? "Reservando..." : "SOLICITAR CITA"}
           </Button>
         </Box>
       </Paper>

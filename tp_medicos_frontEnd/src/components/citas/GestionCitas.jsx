@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { citasIniciales } from "../../mock/Citas";
+import React, { useState, useEffect, useCallback } from "react";
 import PopUpAlertas from "../utils/PopUpAlerta";
+import {
+  getTurnos,
+  actualizarTurno
+} from "../../services/turnosService";
+import { getMedicos } from "../../services/medicosServices";
+import { getObras } from "../../services/obrasServices";
 
-// Simulación de persistencia en localStorage
+// Simulación de persistencia en localStorage (fallback)
 const LOCAL_KEY = "citas_mock_storage";
 
 // Función para obtener la fecha de hoy en formato ISO (YYYY-MM-DD)
@@ -19,66 +24,140 @@ function getWeekLaterISO() {
 }
 
 export default function GestionCitas() {
-  // Carga las citas: si hay en localStorage, usa esas; si no, arranca con el mock.
-  const [citas, setCitas] = useState(() => {
+  // Datos mostrados (preferimos server, fallback a local storage)
+  const [citas, setCitas] = useState([]);
+  const [citasLocalFallback, setCitasLocalFallback] = useState(() => {
     const persisted = localStorage.getItem(LOCAL_KEY);
-    return persisted ? JSON.parse(persisted) : citasIniciales;
+    return persisted ? JSON.parse(persisted) : [];
   });
 
-  // Cada vez que cambian las citas, las guarda en localStorage para simular persistencia.
-  useEffect(() => {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(citas));
-  }, [citas]);
+  // Meta lists
+  const [medicosList, setMedicosList] = useState([]);
+  const [obrasList, setObrasList] = useState([]);
 
-  // Estado para el popup de alertas (por ejemplo, cuando se confirma o cancela una cita)
+  // Loading / UI
+  const [loading, setLoading] = useState(false);
+  const [loadingMeta, setLoadingMeta] = useState(false);
   const [alerta, setAlerta] = useState({ open: false, message: "", type: "info" });
 
-  // Estados para el filtro de fechas del listado
+  // Fecha filtro
   const [fechaDesde, setFechaDesde] = useState(getTodayISO());
   const [fechaHasta, setFechaHasta] = useState(getWeekLaterISO());
 
-  // Cuando el usuario confirma una cita, la marca como "Confirmada" y muestra un aviso.
-  const confirmarCita = (id) => {
-    setCitas(citas =>
-      citas.map(cita =>
-        cita.id === id ? { ...cita, estado: "Confirmada" } : cita
-      )
-    );
-    setAlerta({
-      open: true,
-      message: "Cita confirmada. Se notificará al paciente por correo electrónico.",
-      type: "success"
-    });
+  // Track updates in-flight to disable buttons during requests
+  const [updatingIds, setUpdatingIds] = useState(new Set());
+
+  // --- Helpers para mapear datos del backend / fallback ---
+  const formatPacienteNombre = (c) => {
+    const n = c.paciente_nombre ?? c.nombre ?? "";
+    const a = c.paciente_apellido ?? c.apellido ?? "";
+    return `${n} ${a}`.trim() || "Sin nombre";
+  };
+  const formatTelefono = (c) => c.paciente_telefono ?? c.telefono ?? "";
+  const formatEmail = (c) => c.paciente_email ?? c.email ?? "";
+  const formatFecha = (c) => {
+    if (c.fecha_turno) return c.fecha_turno.substring(0, 10);
+    if (c.fecha) return c.fecha;
+    return "";
+  };
+  const formatHorario = (c) => {
+    if (c.fecha_turno) return new Date(c.fecha_turno).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (c.horario) return c.horario;
+    return "";
+  };
+  const findObraName = (c) => {
+    const id = c.obra_social_id ?? c.obraSocial ?? c.obra;
+    const found = obrasList.find(o => String(o.id) === String(id));
+    return found ? (found.nombre || found.razon_social || found.id) : (c.obraSocial || c.obra || "");
+  };
+  const findMedicoName = (c) => {
+    const id = c.medico_id ?? c.medico;
+    const found = medicosList.find(m => String(m.id) === String(id));
+    if (found) {
+      return `${found.nombre || found.first_name || ""} ${found.apellido || found.lastName || ""}`.trim();
+    }
+    return c.medico_nombre ?? c.medicoName ?? c.medico ?? "";
   };
 
-  // Cuando el usuario cancela una cita, la marca como "Cancelada" y muestra un aviso.
-  const cancelarCita = (id) => {
-    setCitas(citas =>
-      citas.map(cita =>
-        cita.id === id ? { ...cita, estado: "Cancelada" } : cita
-      )
-    );
-    setAlerta({
-      open: true,
-      message: "Cita cancelada. Se notificará al paciente por correo electrónico.",
-      type: "warning"
-    });
+  // Guardar fallback local cada vez que cambia
+  useEffect(() => {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(citasLocalFallback));
+  }, [citasLocalFallback]);
+
+  // Cargar turnos y meta (medicos/obras) del servidor
+  const loadData = useCallback(async (desdeParam = fechaDesde, hastaParam = fechaHasta) => {
+    setLoading(true);
+    setLoadingMeta(true);
+    try {
+      const desdeISO = `${desdeParam}T00:00:00Z`;
+      const hastaISO = `${hastaParam}T23:59:59Z`;
+      const [turnosArr, meds, obras] = await Promise.all([
+        getTurnos({ desde: desdeISO, hasta: hastaISO }).catch(err => { throw err; }),
+        getMedicos().catch(() => []),
+        getObras().catch(() => [])
+      ]);
+      setCitas(Array.isArray(turnosArr) ? turnosArr : []);
+      setMedicosList(meds || []);
+      setObrasList(obras || []);
+    } catch (err) {
+      console.warn("No se pudieron cargar datos del servidor, usando fallback local:", err);
+      setCitas(citasLocalFallback || []);
+    } finally {
+      setLoading(false);
+      setLoadingMeta(false);
+    }
+  }, [fechaDesde, fechaHasta, citasLocalFallback]);
+
+  // Cargar al montar y cuando cambian filtros de fecha
+  useEffect(() => {
+    loadData(fechaDesde, fechaHasta);
+  }, [loadData, fechaDesde, fechaHasta]);
+
+  // Acción: actualizar estado del turno (confirmar / cancelar)
+  const handleUpdateEstado = async (id, nuevoEstado) => {
+    setUpdatingIds(prev => new Set(prev).add(String(id)));
+    try {
+      const updated = await actualizarTurno(id, { estado: nuevoEstado });
+      setCitas(prev => prev.map(c => {
+        if (String(c.id) === String(id) || String(c.id) === String(updated.id)) {
+          return updated;
+        }
+        return c;
+      }));
+      setCitasLocalFallback(prev => prev.map(c => (String(c.id) === String(id) ? { ...c, estado: nuevoEstado } : c)));
+      setAlerta({
+        open: true,
+        message: nuevoEstado === "Confirmada"
+          ? "Cita confirmada. Se notificará al paciente por correo electrónico."
+          : "Cita cancelada. Se notificará al paciente por correo electrónico.",
+        type: nuevoEstado === "Confirmada" ? "success" : "warning"
+      });
+    } catch (err) {
+      console.error("Error actualizando estado del turno:", err);
+      setAlerta({
+        open: true,
+        message: err.message || "Error al actualizar turno",
+        type: "error"
+      });
+    } finally {
+      setUpdatingIds(prev => {
+        const copy = new Set(prev);
+        copy.delete(String(id));
+        return copy;
+      });
+    }
   };
 
-  // Este arreglo contiene solo las citas dentro del rango de fechas filtrado.
-  const citasFiltradas = citas.filter(cita =>
-    cita.fecha >= fechaDesde && cita.fecha <= fechaHasta
-  );
-
+  // Render
   return (
     <div style={{
       minHeight: "65vh",
       display: "flex",
       alignItems: "flex-start",
       justifyContent: "center",
-      background: "#eff6ff"
+      background: "#eff6ff",
+      padding: "20px 0"
     }}>
-      {/* Popup de alertas, aparece cuando se confirma/cancela una cita */}
       <PopUpAlertas
         open={alerta.open}
         message={alerta.message}
@@ -88,17 +167,17 @@ export default function GestionCitas() {
 
       <div style={{
         width: "100%",
-        maxWidth: 1200, // Hace la tabla más ancha, se ve mejor en pantallas grandes
+        maxWidth: 1280, // AGRANDAMOS un poco la grilla
         margin: "40px 0",
         background: "#fff",
         borderRadius: 12,
         boxShadow: "0 4px 24px #0001",
-        padding: "32px 26px"
+        padding: "28px 26px"
       }}>
         <h2 style={{ color: "#2563eb", marginBottom: 24 }}>Gestión de Citas</h2>
 
-        {/* Filtro de fechas para ver solo las citas en el rango elegido */}
-        <div style={{ marginBottom: 18, display: "flex", gap: 18 }}>
+        {/* Filtros de fecha */}
+        <div style={{ marginBottom: 18, display: "flex", gap: 18, alignItems: "center" }}>
           <div>
             <label>Desde: </label>
             <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
@@ -107,89 +186,131 @@ export default function GestionCitas() {
             <label>Hasta: </label>
             <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
           </div>
+          <div style={{ marginLeft: "auto" }}>
+            <button
+              onClick={() => loadData(fechaDesde, fechaHasta)}
+              style={{
+                background: "#2563eb", color: "#fff", border: "none",
+                borderRadius: 6, padding: "8px 14px", cursor: "pointer", fontWeight: 600
+              }}
+            >
+              {loading ? "Cargando..." : "Refrescar"}
+            </button>
+          </div>
         </div>
 
-        <div style={{overflowX: "auto"}}>
+        <div style={{ overflowX: "auto" }}>
           <table style={{
             width: "100%",
             borderCollapse: "collapse",
             fontSize: 15,
             background: "#fff",
-            minWidth: 1000 // Evita que la tabla se achique demasiado en mobile
+            minWidth: 1100 // ligeramente mayor que antes
           }}>
             <thead>
               <tr style={{ background: "#f7fbff" }}>
-                <th style={{...th, width: 170}}>Paciente</th>
-                <th style={{...th, width: 110}}>Teléfono</th>
-                <th style={{...th, width: 170}}>Email</th>
-                <th style={{...th, width: 120}}>Obra Social</th>
-                <th style={{...th, width: 110}}>Fecha</th>
-                <th style={{...th, width: 90}}>Horario</th>
-                <th style={{...th, width: 160}}>Médico</th>
-                <th style={{...th, width: 130}}>Motivo</th>
-                <th style={{...th, width: 110}}>Estado</th>
-                <th style={{...th, width: 90}}></th>
+                <th style={{ ...th, width: 170 }}>Paciente</th>
+                <th style={{ ...th, width: 110 }}>Teléfono</th>
+                <th style={{ ...th, width: 170 }}>Email</th>
+                <th style={{ ...th, width: 120 }}>Obra Social</th>
+                <th style={{ ...th, width: 110 }}>Fecha</th>
+                <th style={{ ...th, width: 90 }}>Horario</th>
+                <th style={{ ...th, width: 160 }}>Médico</th>
+                <th style={{ ...th, width: 130 }}>Motivo</th>
+                <th style={{ ...th, width: 110 }}>Estado</th>
+                <th style={{ ...th, width: 140 }}></th>
               </tr>
             </thead>
             <tbody>
-              {citasFiltradas.length === 0 ? (
-                // Si no hay citas para mostrar, pone este mensaje en la tabla
+              {loading && (
+                <tr>
+                  <td colSpan={10} style={{ textAlign: "center", padding: 30 }}>
+                    Cargando...
+                  </td>
+                </tr>
+              )}
+              {!loading && (!citas || citas.length === 0) && (
                 <tr>
                   <td colSpan={10} style={{ textAlign: "center", padding: 30, color: "#888" }}>
                     No hay citas registradas.
                   </td>
                 </tr>
-              ) : (
-                citasFiltradas.map(cita => (
-                  <tr key={cita.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                    <td style={{...td, width: 170}}>{cita.nombre} {cita.apellido}</td>
-                    <td style={{...td, width: 110}}>{cita.telefono}</td>
-                    <td style={{...td, width: 170}}>{cita.email}</td>
-                    <td style={{...td, width: 120}}>{cita.obraSocial}</td>
-                    <td style={{...td, width: 110}}>{cita.fecha}</td>
-                    <td style={{...td, width: 90}}>{cita.horario}</td>
-                    <td style={{...td, width: 160}}>{cita.medico}</td>
-                    <td style={{...td, width: 130}}>{cita.motivo}</td>
-                    <td style={{...td, width: 110}}>
-                      {/* El color depende del estado de la cita */}
+              )}
+              {!loading && citas && citas.map(cita => {
+                const estado = (cita.estado || "").toString();
+                const id = cita.id;
+                const confirmDisabled = (estado.toLowerCase() === "confirmada") || (estado.toLowerCase() === "cancelada");
+                const cancelDisabled = (estado.toLowerCase() === "cancelada");
+                const updating = updatingIds.has(String(id)) || updatingIds.has(id);
+                return (
+                  <tr key={id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                    <td style={{ ...td, width: 170 }}>{formatPacienteNombre(cita)}</td>
+                    <td style={{ ...td, width: 110 }}>{formatTelefono(cita)}</td>
+                    <td style={{ ...td, width: 170 }}>{formatEmail(cita)}</td>
+                    <td style={{ ...td, width: 120 }}>{findObraName(cita)}</td>
+                    <td style={{ ...td, width: 110 }}>{formatFecha(cita)}</td>
+                    <td style={{ ...td, width: 90 }}>{formatHorario(cita)}</td>
+                    <td style={{ ...td, width: 160 }}>{findMedicoName(cita)}</td>
+                    <td style={{ ...td, width: 130 }}>{cita.motivo || "-"}</td>
+                    <td style={{ ...td, width: 110 }}>
                       <span style={{
-                        color: cita.estado === "Confirmada" ? "#16a34a"
-                          : cita.estado === "Cancelada" ? "#dc2626" : "#eab308",
+                        color: estado.toLowerCase() === "confirmada" ? "#16a34a"
+                          : estado.toLowerCase() === "cancelada" ? "#dc2626" : "#eab308",
                         fontWeight: "bold"
                       }}>
-                        {cita.estado}
+                        {estado || "Solicitada"}
                       </span>
                     </td>
-                    <td style={{...td, width: 90, textAlign:"center"}}>
-                      {/* Si la cita está pendiente, aparece botón para confirmar */}
-                      {cita.estado === "Solicitada" && (
+                    <td style={{ ...td, width: 140, textAlign: "center" }}>
+                      {/* Contenedor de botones: inline, uno al lado del otro */}
+                      <div style={{
+                        display: "flex",
+                        gap: 8,
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}>
                         <button
-                          onClick={() => confirmarCita(cita.id)}
+                          onClick={() => handleUpdateEstado(id, "Confirmada")}
                           style={{
-                            background: "#2563eb", color: "#fff", border: "none",
-                            borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontWeight: 500
+                            background: confirmDisabled ? "#b3c7ef" : "#2563eb",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 6,
+                            padding: "6px 10px",
+                            cursor: confirmDisabled || updating ? "not-allowed" : "pointer",
+                            minWidth: 86, // botones un poco más chicos
+                            fontSize: 13,
+                            opacity: confirmDisabled || updating ? 0.85 : 1,
+                            fontWeight: 600
                           }}
+                          disabled={confirmDisabled || updating}
                         >
                           Confirmar
                         </button>
-                      )}
-                      {/* Si la cita está confirmada, aparece botón para cancelar */}
-                      {cita.estado === "Confirmada" && (
+
                         <button
-                          onClick={() => cancelarCita(cita.id)}
+                          onClick={() => handleUpdateEstado(id, "Cancelada")}
                           style={{
-                            background: "#dc2626", color: "#fff", border: "none",
-                            borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontWeight: 500
+                            background: cancelDisabled ? "#f3a6a6" : "#dc2626",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 6,
+                            padding: "6px 10px",
+                            cursor: cancelDisabled || updating ? "not-allowed" : "pointer",
+                            minWidth: 86,
+                            fontSize: 13,
+                            opacity: cancelDisabled || updating ? 0.85 : 1,
+                            fontWeight: 600
                           }}
+                          disabled={cancelDisabled || updating}
                         >
                           Cancelar
                         </button>
-                      )}
-                      {/* Si la cita está cancelada, no muestra botón */}
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -199,7 +320,6 @@ export default function GestionCitas() {
 }
 
 // Estilos para las celdas de la tabla (cabecera y datos)
-// th: Cabecera de la tabla, azul y con negrita
 const th = {
   padding: "8px 6px",
   borderBottom: "1px solid #e0e7ef",
@@ -207,7 +327,6 @@ const th = {
   fontWeight: 600,
   color: "#2563eb"
 };
-// td: Celdas de datos, separadas por línea gris clara
 const td = {
   padding: "8px 6px",
   borderBottom: "1px solid #f3f3f3"

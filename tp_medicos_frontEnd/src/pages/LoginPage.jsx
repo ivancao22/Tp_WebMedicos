@@ -49,17 +49,27 @@ export default function Login() {
     setError("");
 
     try {
+      // Llamamos al login del contexto. AuthContext se encarga de usar mock o API según USE_API.
       const res = await login({ username, password, remember });
+
       if (res?.status === 200) {
         setStatus("success");
         navigate("/");
-      } else {
-        throw new Error(res?.message || "Credenciales inválidas");
+        return;
       }
-    } catch (err) {
+
+      // Si no es 200, mostramos el mensaje que vino del contexto (mock o API)
+      const msg = res?.message || "Credenciales inválidas";
       setStatus("error");
-      setError(err?.message || "No se pudo iniciar sesión.");
+      setError(msg);
+    } catch (err) {
+      // Errores inesperados (por ejemplo fallo de red)
+      // Intentamos extraer mensaje útil de la respuesta del servidor si existe
+      const serverMsg = err?.response?.data?.error || err?.message || "No se pudo iniciar sesión.";
+      setStatus("error");
+      setError(serverMsg);
     } finally {
+      // si no fue success volvemos a idle para permitir reintentar
       setStatus((s) => (s === "success" ? s : "idle"));
     }
   }
@@ -73,7 +83,7 @@ export default function Login() {
         alignItems: "center",
         justifyContent: "center",
         padding: 16,
-        paddingBottom : 100,
+        paddingBottom: 100,
       }}
     >
       <form
@@ -219,7 +229,6 @@ export default function Login() {
             />
             Recordarme
           </label>
-          
         </div>
 
         {/* Botón para enviar el form */}

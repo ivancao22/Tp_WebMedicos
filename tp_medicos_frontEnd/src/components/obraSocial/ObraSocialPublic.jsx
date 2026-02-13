@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import mockObras from '../../mock/ObraSocial';
+import { getObras } from "../../services/obrasServices";
 
 const STORAGE_KEY = "obrasSociales_v1";
 
 // Esta página muestra la lista de obras sociales con las que trabaja el consultorio.
 // Es solo informativa, para que los pacientes puedan consultar si su cobertura está incluida.
-// Si no la encuentran, les damos los datos de contacto para que puedan consultar.
 export default function ObraSocialPublic() {
-  // Estado: inicializa desde localStorage, o fallback al mock
+  // Estado: lista de obras (intenta cargar desde API, luego localStorage, luego mock)
   const [obras, setObras] = useState(() => {
     try {
       const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -17,7 +17,38 @@ export default function ObraSocialPublic() {
     }
   });
 
-  // Si otra pestaña o acción cambia localStorage, escuchamos y actualizamos
+  const [loading, setLoading] = useState(false);
+  const [errorLoading, setErrorLoading] = useState(null);
+
+  // Cargar obras desde la API al montar (si falla, queda el fallback que ya vino del estado inicial)
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setLoading(true);
+      setErrorLoading(null);
+      try {
+        const arr = await getObras();
+        if (!mounted) return;
+        if (Array.isArray(arr) && arr.length) {
+          setObras(arr);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch {}
+        } else {
+          // Si la API respondió pero no hay datos, no sobreescribimos el fallback
+          console.warn("getObras: respuesta vacía, manteniendo fallback");
+        }
+      } catch (err) {
+        console.warn("No se pudieron cargar las obras desde la API:", err?.message || err);
+        setErrorLoading(err?.message || "Error al cargar obras");
+        // dejamos el fallback (localStorage o mock) tal como estaba
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  // Si otra pestaña cambia localStorage, actualizamos la lista
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === STORAGE_KEY) {
@@ -58,6 +89,18 @@ export default function ObraSocialPublic() {
       >
         Trabajamos con las siguientes obras sociales
       </h2>
+
+      {/* Mensaje de carga / error */}
+      {loading && (
+        <div style={{ textAlign: "center", marginBottom: 12, color: "#4b5563" }}>
+          Cargando obras sociales...
+        </div>
+      )}
+      {!loading && errorLoading && (
+        <div style={{ textAlign: "center", marginBottom: 12, color: "#b91c1c" }}>
+          No se pudieron cargar las obras desde el servidor. Mostrando datos locales.
+        </div>
+      )}
 
       {/* Grid de obras sociales, cada una en su tarjetita */}
       <div

@@ -29,6 +29,18 @@ export default function Header() {
     navigate("/");
   }
 
+  // Helper mínimo para obtener iniciales (2 letras)
+  const getInitials = (u) => {
+    if (!u) return "";
+    const name = (u.nombre || u.username || u.email || "").trim();
+    if (!name) return "";
+    const parts = name.split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const initials = getInitials(user);
+
   return (
     <header className="bg-blue-50 text-blue-900 flex items-center justify-between px-8 py-4 relative transition-all duration-300">
       <div className="flex items-center gap-3">
@@ -85,13 +97,40 @@ export default function Header() {
 
         {user ? (
           <div className="relative">
+            {/* Minimal change: improved visual avatar with initials + small status dot */}
             <button
               onClick={() => setShowUserMenu((v) => !v)}
-              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-blue-700 text-white font-bold text-base sm:text-lg hover:opacity-90 transition"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white font-bold text-base sm:text-lg hover:opacity-90 transition"
               aria-label="Menú usuario"
+              style={{
+                // gradient background to look nicer than flat blue
+                background: 'linear-gradient(135deg,#1e40af,#2563eb)',
+                boxShadow: '0 2px 6px rgba(37,99,235,0.28)',
+              }}
             >
-              {user && user.nombre ? user.nombre[0].toUpperCase() : ""}
+              {/* initials or icon fallback */}
+              {initials ? (
+                <span className="select-none" aria-hidden="true">{initials}</span>
+              ) : (
+                <HiOutlineUser className="w-5 h-5" />
+              )}
+
+              {/* small online/status dot */}
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  right: -1,
+                  bottom: -1,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '9999px',
+                  background: '#10b981', // green
+                  border: '2px solid white',
+                }}
+              />
             </button>
+
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
                 <p className="px-4 py-2 text-sm text-gray-700 border-b truncate">

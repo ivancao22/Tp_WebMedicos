@@ -1,0 +1,470 @@
+openapi: 3.0.3
+info:
+  title: API Consultorio Médico
+  description: API para manejo de médicos, obras sociales y turnos. Documentación en lenguaje claro y ejemplos.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:4000
+    description: Desarrollo (local)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: "mensaje descriptivo"
+    ValidationErrors:
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: "campo X es requerido, campo Y invalido"
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      example:
+        username: "PaulaS@test.com"
+        password: "123"
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            rol:
+              type: string
+      example:
+        token: "eyJhbGciOi..."
+        user:
+          id: 1
+          username: "PaulaS@test.com"
+          rol: "admin"
+    Medico:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        apellido: { type: string }
+        especialidad: { type: string }
+        estado: { type: string }
+        email: { type: string, nullable: true }
+        telefono: { type: string, nullable: true }
+      example:
+        id: 1
+        nombre: "Enrique"
+        apellido: "Gomez"
+        especialidad: "Cardiología"
+        estado: "activo"
+        email: "enrique@example.com"
+        telefono: "12345678"
+    Obra:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+      example:
+        id: 7
+        nombre: "OSECAC"
+    Turno:
+      type: object
+      properties:
+        id: { type: integer }
+        paciente_nombre: { type: string }
+        paciente_apellido: { type: string }
+        paciente_email: { type: string }
+        paciente_telefono: { type: string, nullable: true }
+        obra_social_id: { type: integer, nullable: true }
+        medico_id: { type: integer }
+        fecha_turno: { type: string, format: date-time }
+        motivo: { type: string, nullable: true }
+        estado: { type: string, nullable: true }
+        confirmado_por: { type: integer, nullable: true }
+        cancelado_por: { type: integer, nullable: true }
+      example:
+        id: 1
+        paciente_nombre: "Carlos"
+        paciente_apellido: "Lopez"
+        paciente_email: "carlos@example.com"
+        paciente_telefono: "12345678"
+        obra_social_id: 1
+        medico_id: 1
+        fecha_turno: "2025-11-27T16:00:00.000Z"
+        motivo: "Consulta general"
+        estado: "pendiente"
+paths:
+  /auth/login:
+    post:
+      summary: Autenticación - obtener token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token y usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Missing fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /medicos:
+    get:
+      summary: Listar médicos
+      responses:
+        '200':
+          description: Array de médicos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Medico'
+        '500':
+          description: DB error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /obras:
+    get:
+      summary: Listar obras sociales
+      responses:
+        '200':
+          description: Array de obras sociales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Obra'
+    post:
+      summary: Crear obra social (protegido)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+            example:
+              nombre: "OSECAC"
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Obra'
+        '400':
+          description: Validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden rol
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Nombre duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /obras/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    patch:
+      summary: Actualizar nombre de obra (protegido)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+            example:
+              nombre: "OSECAC - Nuevo"
+      responses:
+        '200':
+          description: Actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Obra'
+        '400':
+          description: Validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing auth
+          content:
+            application/json:
+              $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Nombre duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Eliminar obra (protegido)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                example:
+                  ok: true
+        '401':
+          description: Missing auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /turnos:
+    get:
+      summary: Listar turnos (filtros opcionales)
+      parameters:
+        - in: query
+          name: medico_id
+          schema: { type: integer }
+        - in: query
+          name: desde
+          schema: { type: string, format: date }
+        - in: query
+          name: hasta
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Array de turnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Turno'
+        '500':
+          description: DB error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Crear turno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [fecha_turno, paciente_nombre, paciente_apellido, paciente_email, medico_id]
+                  properties:
+                    fecha_turno: { type: string, format: date-time }
+                    paciente_nombre: { type: string }
+                    paciente_apellido: { type: string }
+                    paciente_email: { type: string }
+                    paciente_telefono: { type: string }
+                    obra_social_id: { type: integer }
+                    medico_id: { type: integer }
+                    motivo: { type: string }
+                - type: object
+                  required: [fecha, hora, paciente_nombre, paciente_apellido, paciente_email, medico_id]
+                  properties:
+                    fecha: { type: string, format: date }
+                    hora: { type: string, pattern: "^\\d{2}:\\d{2}$" }
+                    paciente_nombre: { type: string }
+                    paciente_apellido: { type: string }
+                    paciente_email: { type: string }
+                    paciente_telefono: { type: string }
+                    obra_social_id: { type: integer }
+                    medico_id: { type: integer }
+                    motivo: { type: string }
+            examples:
+              full_iso:
+                summary: Fecha completa ISO
+                value:
+                  fecha_turno: "2025-11-27T16:00:00.000Z"
+                  paciente_nombre: "Carlos"
+                  paciente_apellido: "Lopez"
+                  paciente_email: "carlos@example.com"
+                  medico_id: 1
+                  obra_social_id: 1
+                  motivo: "Consulta"
+              fecha_hora:
+                summary: Fecha + hora separadas
+                value:
+                  fecha: "2025-11-27"
+                  hora: "16:00"
+                  paciente_nombre: "Carlos"
+                  paciente_apellido: "Lopez"
+                  paciente_email: "carlos@example.com"
+                  medico_id: 1
+      responses:
+        '201':
+          description: Turno creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Turno'
+        '400':
+          description: Validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '409':
+          description: Conflicto de horario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /turnos/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Obtener un turno por id
+      responses:
+        '200':
+          description: Turno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Turno'
+        '404':
+          description: No encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Actualizar un turno (campos permitidos)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Campos permitidos: fecha_turno, estado, confirmado_por, cancelado_por, motivo, paciente_telefono
+              properties:
+                fecha_turno: { type: string, format: date-time }
+                estado: { type: string }
+                confirmado_por: { type: integer }
+                cancelado_por: { type: integer }
+                motivo: { type: string }
+                paciente_telefono: { type: string }
+            example:
+              estado: "confirmado"
+              confirmado_por: 1
+      responses:
+        '200':
+          description: Turno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Turno'
+        '400':
+          description: Validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: No encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+security:
+  - bearerAuth: []
